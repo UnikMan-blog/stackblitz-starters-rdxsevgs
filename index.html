@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skripsi Command Center PGSD</title>
+    
+    <!-- SVG Favicon Minimalis (Toga Akademik Emerald) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 10v6M2 10l10-5 10 5-10 5z'/><path d='M6 12v5c3 3 9 3 12 0v-5'/></svg>">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Quill.js CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .ql-container.ql-snow { 
+            border: 1px solid #cbd5e1; 
+            border-bottom-left-radius: 0.5rem; 
+            border-bottom-right-radius: 0.5rem; 
+            font-family: 'Inter', sans-serif; 
+            font-size: 0.875rem; 
+            height: calc(100% - 42px);
+        }
+        .ql-toolbar.ql-snow { 
+            border: 1px solid #cbd5e1; 
+            border-top-left-radius: 0.5rem; 
+            border-top-right-radius: 0.5rem; 
+            background: #f8fafc; 
+            padding: 4px; 
+        }
+        .ql-editor { min-height: 140px; height: 100%; }
+        .doc-editor .ql-editor { min-height: 380px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden bg-slate-50 relative">
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-20 right-6 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full"></div>
+
+    <!-- MOBILE HEADER -->
+    <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center z-20 shadow-md">
+        <div class="flex items-center space-x-2">
+            <i data-lucide="graduation-cap" class="w-6 h-6 text-emerald-400"></i>
+            <span class="font-bold text-lg tracking-tight">Skripsi Command</span>
+        </div>
+        <button id="mobile-menu-btn" class="p-1 focus:outline-none">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- SIDEBAR NAV -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 z-10 transition-all duration-300 h-full">
+        <div class="p-5 border-b border-slate-800 hidden md:flex items-center space-x-3">
+            <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-slate-100 leading-tight">Skripsi Command</h1>
+                <p class="text-xs text-slate-400">PGSD IPS Research Hub</p>
+            </div>
+        </div>
+
+        <!-- EXPLICIT ACCOUNT & USERNAME STATUS BAR IN SIDEBAR -->
+        <div class="p-3 mx-3 mt-3 bg-slate-800/80 rounded-xl border border-slate-700/60 flex items-center justify-between">
+            <div class="flex items-center space-x-2 overflow-hidden">
+                <div class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-xs" id="sidebar-user-avatar">M</div>
+                <div class="truncate">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Pengguna Active</p>
+                    <p class="text-xs font-bold text-white truncate" id="sidebar-username-display">Mahasiswa PGSD</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1 flex-shrink-0">
+                <button onclick="openAuthModal()" title="Pengaturan Akun & Login" class="p-1.5 bg-slate-700 hover:bg-slate-600 text-emerald-400 rounded-lg transition">
+                    <i data-lucide="user-cog" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+            <button onclick="switchTab('dashboard')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="dashboard">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('roadmap')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="roadmap">
+                <i data-lucide="map" class="w-4 h-4"></i>
+                <span>Peta Perjalanan</span>
+            </button>
+            <button onclick="switchTab('tasks')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="tasks">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>Master Task List</span>
+            </button>
+            <button onclick="switchTab('problems')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="problems">
+                <i data-lucide="file-search" class="w-4 h-4"></i>
+                <span>Eksplorasi & Kandidat</span>
+            </button>
+            <button onclick="switchTab('literatures')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="literatures">
+                <i data-lucide="book-open" class="w-4 h-4"></i>
+                <span>Database Literatur</span>
+            </button>
+            <button onclick="switchTab('logbook')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="logbook">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                <span>Logbook Diskusi</span>
+            </button>
+            <button onclick="switchTab('worklog')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="worklog">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+                <span>Catatan Sesi Kerja</span>
+            </button>
+            <button onclick="switchTab('documents')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-sky-400 hover:bg-slate-800 hover:text-sky-300 bg-slate-800 text-white" data-tab="documents">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                <span>Studio Dokumen</span>
+            </button>
+            <button onclick="switchTab('settings')" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white" data-tab="settings">
+                <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                <span>Pengaturan Data</span>
+            </button>
+            
+            <div class="pt-2 mt-2 border-t border-slate-800">
+                <button onclick="openOnboardingTour()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-sky-400 hover:bg-slate-700 hover:text-sky-300">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                    <span>Panduan Aplikasi</span>
+                </button>
+            </div>
+        </nav>
+
+        <div id="storage-indicator" class="p-4 border-t border-slate-800 bg-slate-950/40 text-xs text-slate-400 space-y-1">
+            <div class="flex justify-between items-center">
+                <span>Penyimpanan</span>
+                <span id="auto-save-indicator" class="text-emerald-400 font-mono">Siap...</span>
+            </div>
+            <p id="cloud-sync-status" class="text-[10px] font-medium text-emerald-500">☁️ Cloud Sync Aktif (Aman)</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto h-full p-4 md:p-8 flex flex-col">
+        
+        <div id="top-alert-banner" class="mb-6 hidden flex-shrink-0"></div>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content space-y-6 hidden">
+            <div id="onboarding-guide" class="bg-gradient-to-r from-emerald-900 to-slate-900 text-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-emerald-800 hidden">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-emerald-500 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider text-slate-950">Panduan Pemula</span>
+                        <h3 class="font-bold text-slate-100">Selamat datang di Skripsi Command Center!</h3>
+                    </div>
+                    <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                        Aplikasi ini mendampingi Anda dari eksplorasi awal hingga seminar hasil. Mulailah dengan mengecek <strong>Peta Perjalanan</strong> atau gunakan <strong>Studio Dokumen</strong> untuk menyusun draf bab.
+                    </p>
+                </div>
+                <button onclick="hideDashboardGuide()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition border border-slate-700 whitespace-nowrap">
+                    Saya Paham, Sembunyikan
+                </button>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Dashboard Utama</h2>
+                    <p class="text-sm text-slate-500">Ringkasan status perjalanan skripsi PGSD Anda hari ini.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openWorklogModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Catat Sesi Kerja</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- METRICS GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tahap Saat Ini</span>
+                    <div class="mt-2">
+                        <span id="dash-current-stage" class="text-lg font-bold text-slate-800 block truncate">Eksplorasi Masalah & Bukti Lapangan</span>
+                        <span id="dash-current-stage-sub" class="text-xs text-slate-500 mt-1 inline-block">Tahap 1 dari 9</span>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Progres</span>
+                    <div class="mt-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span id="dash-progress-percent" class="text-2xl font-bold text-slate-800">0%</span>
+                            <span id="dash-progress-count" class="text-xs text-slate-500">0/0 Tugas</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div id="dash-progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tenggat Terdekat</span>
+                    <div class="mt-2">
+                        <div id="dash-upcoming-deadline" class="text-sm font-semibold text-amber-700 truncate">Tidak ada tenggat mendatang</div>
+                        <span id="dash-overdue-count" class="text-xs text-rose-600 mt-1 block font-medium">0 Terlambat</span>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Keputusan Belum Ditetapkan</span>
+                    <div class="mt-2">
+                        <span id="dash-open-decisions" class="text-2xl font-bold text-slate-800">0</span>
+                        <span class="text-xs text-slate-500 block truncate">Topik & Metode Penelitian</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TWO COLUMN DASHBOARD DETAIL -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i data-lucide="play-circle" class="w-5 h-5 text-emerald-600"></i>
+                                Tugas Harus Dikerjakan Selanjutnya
+                            </h3>
+                            <button onclick="switchTab('tasks')" class="text-xs text-emerald-600 font-medium hover:underline">Lihat Semua</button>
+                        </div>
+                        <div id="dash-next-tasks-list" class="space-y-3"><p class="text-xs text-slate-400 italic">Tidak ada tugas tertunda.</p></div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                            <i data-lucide="help-circle" class="w-5 h-5 text-amber-500"></i>
+                            Hambatan & Pertanyaan Belum Terjawab
+                        </h3>
+                        <div id="dash-unanswered-questions" class="space-y-2 text-sm text-slate-600"><p class="text-xs text-slate-400 italic">Belum ada hambatan yang dicatat.</p></div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-4">
+                            <i data-lucide="pie-chart" class="w-5 h-5 text-sky-600"></i>
+                            Progres Per Tahap
+                        </h3>
+                        <div id="dash-stage-breakdown" class="space-y-3"></div>
+                    </div>
+                    <div class="bg-slate-900 text-slate-300 rounded-xl p-5 shadow-sm text-xs space-y-3">
+                        <h4 class="font-bold text-white flex items-center gap-2 text-sm">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i>
+                            Prinsip Akademik PGSD
+                        </h4>
+                        <p class="leading-relaxed">
+                            Penelitian kualitatif dan pengembangan (R&D) diperbolehkan. <strong>PTK tidak diperbolehkan.</strong>
+                        </p>
+                        <p class="text-slate-400 leading-relaxed">
+                            Jangan mengunci topik atau metode di awal secara terburu-buru sebelum fakta lapangan dan literatur memadai.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ROADMAP -->
+        <section id="tab-roadmap" class="tab-content hidden space-y-6">
+            <div class="border-b border-slate-200 pb-4">
+                <h2 class="text-2xl font-bold tracking-tight text-slate-800">Peta Perjalanan Skripsi</h2>
+                <p class="text-sm text-slate-500">Alur 9 tahap terstruktur dari eksplorasi awal hingga persiapan seminar hasil.</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                <div class="flex items-center min-w-[700px] justify-between text-center relative">
+                    <div class="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -z-0 -translate-y-1/2"></div>
+                    <div id="visual-stepper-container" class="flex justify-between w-full relative z-10"></div>
+                </div>
+            </div>
+            <div id="roadmap-stages-container" class="space-y-4"></div>
+        </section>
+
+        <!-- TAB 3: MASTER TASK LIST -->
+        <section id="tab-tasks" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Master Task List</h2>
+                    <p class="text-sm text-slate-500">Kelola seluruh item pekerjaan, target, dan kriteria penyelesaian skripsi.</p>
+                </div>
+                <button onclick="openTaskModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Tugas Baru</span>
+                </button>
+            </div>
+            <div class="flex border-b border-slate-200 space-x-4">
+                <button id="task-view-btn-list" onclick="switchTaskView('list')" class="py-2 px-1 border-b-2 border-emerald-600 font-semibold text-sm text-emerald-600">Tampilan Tabel (List)</button>
+                <button id="task-view-btn-kanban" onclick="switchTaskView('kanban')" class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700">Papan Kanban (Visual)</button>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Filter Tahap</label>
+                    <select id="filter-task-stage" onchange="renderAllTaskViews()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Filter Status</label>
+                    <select id="filter-task-status" onchange="renderAllTaskViews()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="ALL">Semua Status</option>
+                        <option value="Belum dikerjakan">Belum dikerjakan</option>
+                        <option value="Sedang dikerjakan">Sedang dikerjakan</option>
+                        <option value="Menunggu">Menunggu</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Filter Prioritas</label>
+                    <select id="filter-task-priority" onchange="renderAllTaskViews()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="ALL">Semua Prioritas</option>
+                        <option value="Tinggi">Tinggi</option>
+                        <option value="Sedang">Sedang</option>
+                        <option value="Rendah">Rendah</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Cari Tugas</label>
+                    <input type="text" id="filter-task-search" onkeyup="renderAllTaskViews()" placeholder="Cari nama tugas..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+            </div>
+            <div id="task-view-list" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase text-slate-500">
+                            <tr>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Nama Tugas & Subtugas</th>
+                                <th class="p-4">Tahap</th>
+                                <th class="p-4">Prioritas</th>
+                                <th class="p-4">Tenggat</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="task-view-kanban" class="hidden overflow-x-auto pb-4">
+                <div class="flex gap-4 min-w-[900px] h-full" id="kanban-container"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: EKSPLORASI & KANDIDAT TOPIK -->
+        <section id="tab-problems" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Eksplorasi Masalah & Kandidat Topik</h2>
+                    <p class="text-sm text-slate-500">Dokumentasikan temuan lapangan dan bandingkan kandidat topik secara rasional.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="exportTopicsToWord()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span class="hidden md:inline">Ekspor ke Word</span>
+                    </button>
+                    <button onclick="openTopicModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Tambah Kandidat</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex border-b border-slate-200 space-x-4">
+                <button id="subtab-btn-topics" onclick="switchProblemSubtab('topics')" class="py-2 px-1 border-b-2 border-emerald-600 font-semibold text-sm text-emerald-600">Daftar Kandidat Topik</button>
+                <button id="subtab-btn-compare" onclick="switchProblemSubtab('compare')" class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700">Matriks Komparasi (3-5 Topik)</button>
+            </div>
+            <div id="subtab-content-topics" class="space-y-4">
+                <div id="topics-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div id="subtab-content-compare" class="hidden space-y-4">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-xs leading-relaxed flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <strong>Catatan Penilaian Akademik:</strong> Penilaian kualitatif (skor 1-5) bertujuan untuk membantu pertimbangan objektif, bukan menggantikan pertimbangan akademik atau arahan dosen pembimbing.
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto p-4">
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold text-xs">
+                                <th class="p-3 border-r border-slate-200 min-w-[180px]">Kriteria Evaluasi</th>
+                                <th id="comp-header-1" class="p-3 text-center min-w-[200px]">Kandidat 1</th>
+                                <th id="comp-header-2" class="p-3 text-center min-w-[200px]">Kandidat 2</th>
+                                <th id="comp-header-3" class="p-3 text-center min-w-[200px]">Kandidat 3</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrix-comparison-body" class="divide-y divide-slate-200 text-xs text-slate-600"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: DATABASE LITERATUR -->
+        <section id="tab-literatures" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Database Literatur IPS SD</h2>
+                    <p class="text-sm text-slate-500">Kumpulkan referensi ilmiah dan petakan celah penelitian (research gap).</p>
+                </div>
+                <button onclick="openLiteratureModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Literatur</span>
+                </button>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3">
+                <input type="text" id="lit-search-input" onkeyup="renderLiteratureList()" placeholder="Cari judul, penulis, atau kata kunci..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                <select id="lit-filter-access" onchange="renderLiteratureList()" class="bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <option value="ALL">Semua Akses</option>
+                    <option value="Open Access">Open Access</option>
+                    <option value="Restricted">Terbatas / Berbayar</option>
+                    <option value="Perlu Dicari">Perlu Dicari Teks Penuh</option>
+                </select>
+            </div>
+            <div id="literature-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </section>
+
+        <!-- TAB 6: LOGBOOK DISKUSI & KEPUTUSAN -->
+        <section id="tab-logbook" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Logbook Diskusi & Keputusan</h2>
+                    <p class="text-sm text-slate-500">Catat setiap sesi bimbingan dosen dan pertimbangan perubahan arah skripsi.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="exportLogbookToWord()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span class="hidden md:inline">Ekspor ke Word</span>
+                    </button>
+                    <button onclick="openLogbookModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Tambah Log Diskusi</span>
+                    </button>
+                </div>
+            </div>
+            <div id="logbook-container" class="space-y-4"></div>
+        </section>
+
+        <!-- TAB 7: CATATAN SESI KERJA -->
+        <section id="tab-worklog" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Catatan Sesi Kerja (Work Log)</h2>
+                    <p class="text-sm text-slate-500">Rekam mikro-progres harian agar menjaga fokus dan momentum menulis.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openPomodoroModal()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="timer" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Mode Fokus (25m)</span>
+                    </button>
+                    <button onclick="openWorklogModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Mulai Catat Sesi</span>
+                    </button>
+                </div>
+            </div>
+            <div id="worklog-container" class="space-y-4"></div>
+        </section>
+
+        <!-- TAB 8: STUDIO DOKUMEN (TRIPLE-MODE & SIDE-BY-SIDE ASSISTANT & SUB-TABS) -->
+        <section id="tab-documents" class="tab-content space-y-4 flex-1 flex flex-col h-full overflow-hidden pb-4">
+            <!-- PROFILE META BANNER WITH DEFAULT INSTRUCTIONS -->
+            <div class="bg-slate-900 text-white p-4 rounded-xl shadow-sm border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 flex-shrink-0">
+                <div class="space-y-1 flex-1 w-full">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded uppercase tracking-wider">Informasi Meta Skripsi</span>
+                        <button onclick="openProfileMetaModal()" class="text-xs text-sky-400 hover:underline font-medium flex items-center gap-1">
+                            <i data-lucide="edit-2" class="w-3 h-3"></i> Sunting Profil
+                        </button>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:items-center gap-x-6 gap-y-1 text-xs">
+                        <div class="truncate max-w-xl"><strong class="text-slate-400">Judul:</strong> <span id="meta-display-judul" class="font-semibold text-slate-100 italic opacity-80">Belum diisi (Klik 'Sunting Profil' untuk mengisi judul skripsi)</span></div>
+                        <div><strong class="text-slate-400">Peneliti:</strong> <span id="meta-display-peneliti" class="font-medium text-slate-200 italic opacity-80">Belum diisi</span></div>
+                        <div><strong class="text-slate-400">NIM:</strong> <span id="meta-display-nim" class="font-mono text-slate-300 italic opacity-80">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HEADER STUDIO -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-200 pb-2 flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-xl font-bold tracking-tight text-slate-800">Studio Dokumen</h2>
+                    <select id="doc-mode-select" onchange="changeDocMode(this.value)" class="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-lg px-3 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="proposal">Mode 1: Proposal (Sempro - Bab 1, 2, 3)</option>
+                        <option value="skripsi">Mode 2: Laporan Skripsi (Semhas - Bab 4, 5)</option>
+                        <option value="artikel">Mode 3: Artikel Ilmiah / Jurnal Publikasi</option>
+                    </select>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="triggerSynthesisForArticle()" id="btn-pull-synthesis" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Tarik Poin Skripsi
+                    </button>
+                    <button onclick="saveDocumentData()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition" title="Pintasan: Ctrl + S">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Draf
+                    </button>
+                    <button onclick="exportDocToWord()" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export .Doc
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TABS DOKUMEN & FOKUS BANNER -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 flex-shrink-0">
+                <div id="doc-subtabs-container" class="flex space-x-1 border-b border-slate-200 w-full md:w-auto"></div>
+                <div id="doc-mode-banner" class="text-[11px] text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                    <span id="doc-mode-focus-desc"></span>
+                </div>
+            </div>
+
+            <!-- SIDE-BY-SIDE ASSISTANT -->
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden min-h-[420px]">
+                <!-- PANEL KIRI: KETENTUAN KAMPUS -->
+                <div class="lg:col-span-4 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
+                    <div class="bg-slate-100 p-2.5 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+                        <h3 class="font-bold text-xs uppercase text-slate-700 flex items-center gap-1.5">
+                            <i data-lucide="bookmark" class="w-4 h-4 text-emerald-600"></i> Ketentuan Kampus
+                        </h3>
+                        <button onclick="saveGuidelineData()" class="text-[10px] font-bold bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded text-emerald-800 transition">Simpan</button>
+                    </div>
+                    <div id="editor-guideline" class="flex-1 overflow-y-auto"></div>
+                </div>
+
+                <!-- PANEL KANAN: AREA PENGETIKAN DRAF AKTIF -->
+                <div class="lg:col-span-8 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-full overflow-hidden doc-editor">
+                    <div class="bg-slate-100 p-2.5 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+                        <h3 id="doc-panel-title" class="font-bold text-xs uppercase text-sky-800 flex items-center gap-1.5"></h3>
+                        <div class="flex items-center space-x-3 text-[10px] text-slate-500 font-mono">
+                            <span id="word-count-badge">0 Kata</span>
+                            <span class="italic">Kop Header Resmi Terpasang</span>
+                        </div>
+                    </div>
+                    <div id="editor-main-doc" class="flex-1 overflow-y-auto"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 9: SETTINGS & BACKUP -->
+        <section id="tab-settings" class="tab-content space-y-6 hidden">
+            <div class="border-b border-slate-200 pb-4">
+                <h2 class="text-2xl font-bold tracking-tight text-slate-800">Pengaturan Data & Akun</h2>
+                <p class="text-sm text-slate-500">Kelola profil nama pengguna, status login, dan cadangan data skripsi Anda.</p>
+            </div>
+
+            <!-- EXPLICIT USER PROFILE & AUTH CARD -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h4 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-5 h-5 text-emerald-600"></i>
+                    Identitas & Status Sesi Pengguna
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Tampilan (Username)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="settings-username-input" placeholder="Masukkan nama Anda..." class="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <button onclick="saveCustomUsername()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Simpan</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Status Autentikasi Cloud</label>
+                        <div class="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-2.5 text-sm">
+                            <span id="settings-auth-status-text" class="font-medium text-slate-700">Mode Tamu (Lokal)</span>
+                            <button onclick="openAuthModal()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded transition">Kelola Login</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-900 text-slate-200 rounded-xl p-6 shadow-sm space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5 text-emerald-400"></i>
+                    Sistem Multi-user & Cloud Sync
+                </h3>
+                <div class="text-sm space-y-2 text-slate-300 leading-relaxed">
+                    <p>• <strong>Keamanan Data:</strong> Aplikasi ini terhubung dengan server Database Cloud yang aman.</p>
+                    <p>• <strong>Multi-user:</strong> Setiap pengguna diberi kunci akses unik (User ID). Data Anda terisolasi dan tidak bisa dilihat pengguna lain.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="font-bold text-slate-800 text-base">Ekspor Data Cadangan</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">Simpan cadangan sekunder ke komputer Anda sebagai file JSON atau salin ke clipboard.</p>
+                    <div class="flex flex-col gap-2">
+                        <button onclick="exportDataJSON()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium flex justify-center items-center gap-2 transition">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Unduh Berkas Cadangan (.JSON)</span>
+                        </button>
+                        <button onclick="copyBackupToClipboard()" class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-lg text-sm font-medium flex justify-center items-center gap-2 transition">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span>Salin Data Cadangan (Teks)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="font-bold text-slate-800 text-base">Impor Data (Restore)</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">Pulihkan data skripsi dari berkas JSON yang pernah Anda unduh sebelumnya.</p>
+                    <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataJSON(event)">
+                    <button onclick="document.getElementById('import-file-input').click()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium flex justify-center items-center gap-2 transition">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>Pilih Berkas JSON untuk Impor</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FLOATING QUICK ACTION BUTTON -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-2">
+        <button onclick="openWorklogModal()" title="Catat Sesi Kerja Cepat" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-full shadow-lg transition flex items-center justify-center">
+            <i data-lucide="plus" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- MODAL META SKRIPSI -->
+    <div id="modal-meta" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Informasi Meta Skripsi</h3>
+                <button onclick="closeModal('modal-meta')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-meta" onsubmit="saveProfileMeta(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Judul Penelitian Skripsi Resmi *</label>
+                    <textarea id="meta-judul" required rows="2" placeholder="Contoh: Penggunaan Komik Digital dalam Pembelajaran IPS SD" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Peneliti *</label>
+                    <input type="text" id="meta-peneliti" required placeholder="Contoh: Ahmad Dahlan" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">NIM *</label>
+                    <input type="text" id="meta-nim" required placeholder="Contoh: 2005123456" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-meta')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Meta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL AUTH / LOGIN & LOGOUT MANAGEMENT -->
+    <div id="modal-auth" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex justify-center items-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-8 text-center space-y-6">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="user-check" class="w-8 h-8"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-bold text-slate-800">Manajemen Akun & Sesi</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Pilih opsi masuk dengan Google untuk sinkronisasi Cloud, kelola nama pengguna, atau keluar ke Mode Tamu.</p>
+            </div>
+            <div class="space-y-3 pt-2">
+                <button onclick="popupGoogleLogin()" class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 py-3 rounded-xl text-sm font-semibold flex justify-center items-center gap-3 transition shadow-sm">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path></svg>
+                    <span>Masuk / Tautkan Akun Google</span>
+                </button>
+                <button onclick="logoutAccount()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 py-3 rounded-xl text-sm font-semibold flex justify-center items-center gap-2 transition">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Keluar (Mode Tamu / Offline)
+                </button>
+                <button onclick="closeAuthModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-sm font-medium transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUBTASK KELOLA -->
+    <div id="modal-subtask" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Kelola Subtugas</h3>
+                <button onclick="closeModal('modal-subtask')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-subtask" onsubmit="saveSubtask(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="subtask-task-id">
+                <input type="hidden" id="subtask-id">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Subtugas *</label>
+                    <input type="text" id="subtask-name" required placeholder="Contoh: Membuat draf kuesioner" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-subtask')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Subtugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TASK -->
+    <div id="modal-task" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-task-title" class="font-bold text-slate-800 text-lg">Tambah Tugas Baru</h3>
+                <button onclick="closeModal('modal-task')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-task" onsubmit="saveTask(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="task-id">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Tugas *</label>
+                    <input type="text" id="task-name" required placeholder="Contoh: Mengumpulkan 5 artikel jurnal IPS SD" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Tahap Skripsi</label>
+                        <select id="task-stage" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Status</label>
+                        <select id="task-status" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Belum dikerjakan">Belum dikerjakan</option>
+                            <option value="Sedang dikerjakan">Sedang dikerjakan</option>
+                            <option value="Menunggu">Menunggu</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Prioritas</label>
+                        <select id="task-priority" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Tinggi">Tinggi</option>
+                            <option value="Sedang" selected>Sedang</option>
+                            <option value="Rendah">Rendah</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Tanggal Tenggat</label>
+                        <input type="date" id="task-deadline" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Jenis Tenggat</label>
+                        <select id="task-deadline-type" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Target Pribadi">Target Pribadi</option>
+                            <option value="Resmi / Pembimbing">Resmi / Pembimbing</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Kriteria Penyelesaian (Definition of Done)</label>
+                    <input type="text" id="task-done-criteria" placeholder="Contoh: Tersusun tabel ringkasan 5 artikel" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Langkah Berikutnya (Rekomendasi)</label>
+                    <input type="text" id="task-next-step" placeholder="Contoh: Melakukan sintesis celah penelitian" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Catatan Tambahan</label>
+                    <textarea id="task-notes" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-task')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Tugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL KANDIDAT TOPIK -->
+    <div id="modal-topic" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-topic-title" class="font-bold text-slate-800 text-lg">Formulir Kandidat Topik & Masalah</h3>
+                <button onclick="closeModal('modal-topic')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex border-b border-slate-200 space-x-4 text-xs font-semibold">
+                <button type="button" id="topic-tab-btn-1" onclick="switchTopicFormTab(1)" class="pb-2 border-b-2 border-emerald-600 text-emerald-600">1. Identifikasi Masalah</button>
+                <button type="button" id="topic-tab-btn-2" onclick="switchTopicFormTab(2)" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600">2. Evaluasi Skor Kelayakan</button>
+            </div>
+            <form id="form-topic" onsubmit="saveTopic(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="topic-id">
+                <div id="topic-form-step-1" class="space-y-4">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Judul / Topik Kandidat *</label>
+                        <input type="text" id="topic-title" required placeholder="Contoh: Penggunaan Media Komik Digital dalam Pembelajaran IPS SD" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Fakta / Kondisi Lapangan</label>
+                            <textarea id="topic-facts" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Masalah Utama yang Diidentifikasi</label>
+                            <textarea id="topic-problem" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Dugaan Penyebab</label>
+                            <textarea id="topic-cause" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Alternatif Solusi</label>
+                            <textarea id="topic-solution" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Kecocokan Metode Penelitian</label>
+                            <select id="topic-method" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="Penelitian Kualitatif (Deskriptif/Studi Kasus)">Penelitian Kualitatif (Studi Kasus / Fenomenologi)</option>
+                                <option value="Penelitian Pengembangan (R&D)">Penelitian Pengembangan (R&D - ADDIE/4D)</option>
+                                <option value="Belum Ditetapkan">Belum Ditetapkan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Celah Penelitian (Research Gap)</label>
+                            <input type="text" id="topic-gap" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+                <div id="topic-form-step-2" class="hidden space-y-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Penilaian Kriteria Kelayakan (Skala 1 - 5)</h4>
+                            <span class="text-[11px] text-slate-400">1 = Rendah, 5 = Sangat Tinggi</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div><label class="block text-slate-700 font-medium mb-1">1. Masalah Nyata Lapangan</label><input type="number" id="score-real-problem" min="1" max="5" value="3" class="w-full border border-slate-300 rounded-lg p-2"></div>
+                            <div><label class="block text-slate-700 font-medium mb-1">2. Nilai Akademik / Manfaat</label><input type="number" id="score-academic-val" min="1" max="5" value="3" class="w-full border border-slate-300 rounded-lg p-2"></div>
+                            <div><label class="block text-slate-700 font-medium mb-1">3. Kejelasan Celah Penelitian</label><input type="number" id="score-gap" min="1" max="5" value="3" class="w-full border border-slate-300 rounded-lg p-2"></div>
+                            <div><label class="block text-slate-700 font-medium mb-1">4. Kecocokan Metode</label><input type="number" id="score-method-fit" min="1" max="5" value="3" class="w-full border border-slate-300 rounded-lg p-2"></div>
+                            <div><label class="block text-slate-700 font-medium mb-1">5. Kelayakan Lapangan & Waktu</label><input type="number" id="score-feasibility" min="1" max="5" value="3" class="w-full border border-slate-300 rounded-lg p-2"></div>
+                            <div><label class="block text-slate-700 font-medium mb-1">6. Kekuatan saat Diuji Bimbingan</label><input type="number" id="score-defense" min="1" max="5" value="3" class="w-full border border-slate-300 rounded-lg p-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-topic')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Kandidat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL LITERATUR -->
+    <div id="modal-literature" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-lit-title" class="font-bold text-slate-800 text-lg">Formulir Artikel Literatur</h3>
+                <button onclick="closeModal('modal-literature')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-literature" onsubmit="saveLiterature(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="lit-id">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Judul Artikel / Jurnal *</label>
+                    <input type="text" id="lit-title" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label class="block font-medium text-slate-700 mb-1">Penulis</label><input type="text" id="lit-authors" placeholder="Suhardi et al." class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                    <div><label class="block font-medium text-slate-700 mb-1">Tahun Penerbitan</label><input type="number" id="lit-year" placeholder="2023" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                    <div><label class="block font-medium text-slate-700 mb-1">Status Akses</label>
+                        <select id="lit-access" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Open Access">Open Access</option>
+                            <option value="Restricted">Terbatas / Berbayar</option>
+                            <option value="Perlu Dicari">Perlu Dicari Teks Penuh</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block font-medium text-slate-700 mb-1">Nama Jurnal / Sumber</label><input type="text" id="lit-journal" placeholder="Jurnal Pendidikan Dasar IPS" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                    <div><label class="block font-medium text-slate-700 mb-1">DOI / Tautan Sumber</label><input type="text" id="lit-url" placeholder="https://doi.org/10.xxxx/..." class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block font-medium text-slate-700 mb-1">Tujuan & Metode Penelitian</label><textarea id="lit-method" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea></div>
+                    <div><label class="block font-medium text-slate-700 mb-1">Temuan Utama (Fakta Sumber)</label><textarea id="lit-findings" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea></div>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Interpretasi Pribadi & Relevansi ke Skripsi Anda</label>
+                    <textarea id="lit-interpretation" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-literature')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Literatur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL LOGBOOK DISKUSI (WITH RICH TEXT EDITOR) -->
+    <div id="modal-logbook" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-logbook-title" class="font-bold text-slate-800 text-lg">Catat Log Diskusi / Bimbingan</h3>
+                <button onclick="closeModal('modal-logbook')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-logbook" onsubmit="saveLogbook(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="log-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block font-medium text-slate-700 mb-1">Tanggal Diskusi *</label><input type="date" id="log-date" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                    <div><label class="block font-medium text-slate-700 mb-1">Topik Diskusi *</label><input type="text" id="log-topic" required placeholder="Diskusi Penentuan Topik IPS SD" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Masukan Dosen Pembimbing</label>
+                    <div id="editor-log-feedback" class="bg-white"></div>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Keputusan Ditentukan & Alasannya</label>
+                    <textarea id="log-decision" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Tindakan Konkret Sesi Berikutnya *</label>
+                    <input type="text" id="log-next-action" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-logbook')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Logbook</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL WORK LOG (WITH RICH TEXT EDITOR) -->
+    <div id="modal-worklog" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-worklog-title" class="font-bold text-slate-800 text-lg">Catat Sesi Kerja Harian</h3>
+                <button onclick="closeModal('modal-worklog')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-worklog" onsubmit="saveWorklog(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="work-id">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Apa yang Dikerjakan Sesi Ini? *</label>
+                    <input type="text" id="work-done" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Temuan Utama / Perubahan Pemahaman</label>
+                    <div id="editor-work-insights" class="bg-white"></div>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Kendala yang Dihadapi</label>
+                    <input type="text" id="work-barriers" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Tindakan Konkret Sesi Berikutnya *</label>
+                    <input type="text" id="work-next-action" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-worklog')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium">Simpan Sesi Kerja</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POMODORO TIMER -->
+    <div id="modal-pomodoro" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[55] hidden flex justify-center items-center p-4">
+        <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md p-8 text-center space-y-6">
+            <h2 class="text-3xl font-bold text-white tracking-tight">Mode Fokus</h2>
+            <div class="text-6xl font-mono font-bold text-emerald-400" id="pomo-timer-display">25:00</div>
+            <div id="pomo-message" class="text-slate-300 text-sm h-5 font-medium"></div>
+            <div class="text-left space-y-2">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Tautkan ke Tugas (Opsional)</label>
+                <select id="pomo-task-select" class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                    <option value="">-- Bebas (Tidak ditautkan) --</option>
+                </select>
+            </div>
+            <div class="flex justify-center space-x-4 pt-4">
+                <button type="button" onclick="closePomodoroModal()" class="px-5 py-2.5 border border-slate-600 rounded-xl text-slate-300 hover:bg-slate-700 transition font-medium">Keluar</button>
+                <button type="button" id="pomo-btn-start" onclick="startPomodoro()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-900/50">
+                    <i data-lucide="play" class="w-5 h-5"></i> Mulai Fokus
+                </button>
+                <button type="button" id="pomo-btn-pause" onclick="pausePomodoro()" class="hidden px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition flex items-center gap-2 shadow-lg shadow-amber-900/50">
+                    <i data-lucide="pause" class="w-5 h-5"></i> Jeda
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ONBOARDING TOUR -->
+    <div id="modal-onboarding" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex justify-center items-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden relative">
+            <div class="w-full bg-slate-100 h-1"><div id="tour-progress" class="bg-sky-500 h-1 rounded-full transition-all duration-300" style="width: 20%;"></div></div>
+            <button onclick="closeOnboardingTour()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="p-8 md:p-10">
+                <div id="tour-content" class="flex flex-col md:flex-row items-center gap-6 mb-8"></div>
+                <div class="flex items-center justify-center md:justify-start mb-6">
+                    <input type="checkbox" id="dont-show-tour-checkbox" checked class="w-4 h-4 text-emerald-600 bg-slate-100 border-slate-300 rounded focus:ring-emerald-500">
+                    <label for="dont-show-tour-checkbox" class="ml-2 text-xs font-medium text-slate-600">Jangan tampilkan panduan ini secara otomatis di kemudian hari</label>
+                </div>
+                <div class="flex justify-between items-center border-t border-slate-100 pt-5 mt-2">
+                    <button id="tour-btn-prev" onclick="tourStep(-1)" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium hidden">Sebelumnya</button>
+                    <div class="flex-1"></div>
+                    <button id="tour-btn-next" onclick="tourStep(1)" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-medium shadow-sm">Lanjut Mengerti</button>
+                    <button id="tour-btn-finish" onclick="closeOnboardingTour()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow-sm hidden flex items-center gap-2">
+                        <i data-lucide="check" class="w-4 h-4"></i> Siap Memulai!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT APPLICATION LOGIC -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script>
+        const LOCAL_STORAGE_KEY = 'skripsi_command_center_local_db';
+
+        const ROADMAP_STAGES = [
+            { id: 1, name: "Eksplorasi Masalah & Bukti Lapangan", desc: "Penelusuran masalah awal di sekolah dasar & identifikasi kebutuhan pembelajaran IPS." },
+            { id: 2, name: "Telaah Literatur & Kebijakan Kurikulum", desc: "Mengkaji teori, jurnal relevan, dan standar Kurikulum Merdeka / K13 untuk IPS SD." },
+            { id: 3, name: "Penyusunan & Penilaian Kandidat Topik", desc: "Formulasi 3-5 opsi topik dan evaluasi kelayakan akademik serta lapangan." },
+            { id: 4, name: "Penetapan Metode & Fokus Penelitian", desc: "Mengunci pilihan antara Kualitatif atau R&D (PTK dilarang)." },
+            { id: 5, name: "Penyusunan Proposal & Sempro", desc: "Penulisan Bab 1-3 dan ujian Seminar Proposal Skripsi." },
+            { id: 6, name: "Revisi Proposal & Persiapan Lapangan", desc: "Penyempurnaan instrumen penelitian, surat izin sekolah, dan validator." },
+            { id: 7, name: "Pengumpulan & Analisis Data Lapangan", desc: "Pelaksanaan observasi, wawancara, dokumentasi, atau uji coba produk." },
+            { id: 8, name: "Penulisan Draft Skripsi Lengkap", desc: "Penyusunan Bab 4 Pembahasan dan Bab 5 Kesimpulan & Saran." },
+            { id: 9, name: "Persiapan Seminar Hasil (Semhas) & Munaqosah", desc: "Penyusunan artikel publikasi, slide presentasi, dan pendaftaran ujian." }
+        ];
+
+        // DEFAULT DATA WITH EMPTY PLACEHOLDERS FOR PROFILE META SKRIPSI
+        const DEFAULT_DATA = {
+            username: "Mahasiswa PGSD",
+            currentStageId: 1,
+            profile: {
+                judul: "",
+                peneliti: "",
+                nim: ""
+            },
+            settings: { hasSeenTour: false },
+            tasks: [],
+            topics: [],
+            literatures: [],
+            logbook: [],
+            worklogs: [],
+            documents: {
+                proposal: { bab1: "", bab2: "", bab3: "" },
+                skripsi: { bab4: "", bab5: "" },
+                artikel: { naskah: "" }
+            },
+            guidelines: {
+                proposal: "",
+                skripsi: "",
+                artikel: ""
+            }
+        };
+
+        // State variabel Studio Dokumen Aktif
+        let currentDocMode = 'proposal';
+        let currentDocSubtab = 'bab1';
+        let hasUnsavedChanges = false;
+        let autoSaveTimer = null;
+
+        let editorGuideline, editorMainDoc, editorLogFeedback, editorWorkInsights;
+
+        function initQuillEditors() {
+            if (!editorGuideline && document.getElementById('editor-guideline')) {
+                editorGuideline = new Quill('#editor-guideline', {
+                    theme: 'snow',
+                    modules: { toolbar: [['bold', 'italic'], [{ 'list': 'ordered' }, { 'list': 'bullet' }]] },
+                    placeholder: 'Tempel ketentuan format penulisan bab dari kampus di sini...'
+                });
+                editorGuideline.on('text-change', triggerAutoSaveDebounce);
+            }
+            if (!editorMainDoc && document.getElementById('editor-main-doc')) {
+                editorMainDoc = new Quill('#editor-main-doc', {
+                    theme: 'snow',
+                    modules: { toolbar: [['bold', 'italic', 'underline', 'header'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['clean']] },
+                    placeholder: 'Tulis draf kasar, poin argumen, atau kerangka logika di sini...'
+                });
+                editorMainDoc.on('text-change', () => {
+                    const text = editorMainDoc.getText().trim();
+                    const words = text ? text.split(/\s+/).length : 0;
+                    const badge = document.getElementById('word-count-badge');
+                    if (badge) badge.innerText = `${words} Kata`;
+                    triggerAutoSaveDebounce();
+                });
+            }
+            if (!editorLogFeedback && document.getElementById('editor-log-feedback')) {
+                editorLogFeedback = new Quill('#editor-log-feedback', {
+                    theme: 'snow',
+                    modules: { toolbar: [['bold', 'italic'], [{ 'list': 'bullet' }]] },
+                    placeholder: 'Catat masukan dosen pembimbing...'
+                });
+            }
+            if (!editorWorkInsights && document.getElementById('editor-work-insights')) {
+                editorWorkInsights = new Quill('#editor-work-insights', {
+                    theme: 'snow',
+                    modules: { toolbar: [['bold', 'italic'], [{ 'list': 'bullet' }]] },
+                    placeholder: 'Catat temuan utama atau insight sesi ini...'
+                });
+            }
+        }
+
+        function triggerAutoSaveDebounce() {
+            hasUnsavedChanges = true;
+            const indicator = document.getElementById('auto-save-indicator');
+            if (indicator) indicator.innerText = "Mengetik...";
+            
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                saveDocumentData(true); // Silent Auto-Save
+            }, 1500);
+        }
+
+        function loadInitialLocalData() {
+            try {
+                const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    const merged = Object.assign({}, DEFAULT_DATA, parsed);
+                    merged.currentStageId = parseInt(merged.currentStageId) || 1;
+                    if (!merged.profile) merged.profile = JSON.parse(JSON.stringify(DEFAULT_DATA.profile));
+                    if (!Array.isArray(merged.tasks)) merged.tasks = [];
+                    if (!Array.isArray(merged.topics)) merged.topics = [];
+                    if (!Array.isArray(merged.literatures)) merged.literatures = [];
+                    if (!Array.isArray(merged.logbook)) merged.logbook = [];
+                    if (!Array.isArray(merged.worklogs)) merged.worklogs = [];
+                    if (!merged.documents || !merged.documents.proposal) {
+                        merged.documents = JSON.parse(JSON.stringify(DEFAULT_DATA.documents));
+                    }
+                    if (!merged.guidelines || typeof merged.guidelines === 'string') {
+                        merged.guidelines = { proposal: merged.guidelines || "", skripsi: "", artikel: "" };
+                    }
+                    return merged;
+                }
+            } catch(e) { console.error("Gagal membaca LocalStorage:", e); }
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        var appData = loadInitialLocalData();
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+                hasUnsavedChanges = false;
+                const now = new Date();
+                const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                const indicator = document.getElementById('auto-save-indicator');
+                if(indicator) indicator.innerText = `Tersimpan ${timeStr}`;
+
+                if (window.syncToCloud) window.syncToCloud(appData);
+                updateDashboardMetrics();
+                checkUpcomingNotifications();
+                updateSidebarUserDisplay();
+                updateProfileMetaUI();
+            } catch (e) { console.error("Gagal menyimpan:", e); }
+        }
+
+        function updateSidebarUserDisplay() {
+            const nameDisplay = document.getElementById('sidebar-username-display');
+            const avatarDisplay = document.getElementById('sidebar-user-avatar');
+            const settingsInput = document.getElementById('settings-username-input');
+
+            const name = appData.username || "Mahasiswa PGSD";
+            if (nameDisplay) nameDisplay.innerText = name;
+            if (avatarDisplay) avatarDisplay.innerText = name.charAt(0).toUpperCase();
+            if (settingsInput && settingsInput.value !== name) settingsInput.value = name;
+        }
+
+        // RENDER PROFILE META WITH HELPFUL EMPTY PLACEHOLDERS
+        function updateProfileMetaUI() {
+            if (!appData.profile) appData.profile = { judul: "", peneliti: "", nim: "" };
+            const j = document.getElementById('meta-display-judul');
+            const p = document.getElementById('meta-display-peneliti');
+            const n = document.getElementById('meta-display-nim');
+
+            if (j) {
+                if (appData.profile.judul && appData.profile.judul.trim() !== "") {
+                    j.innerText = appData.profile.judul;
+                    j.className = "font-semibold text-slate-100";
+                } else {
+                    j.innerText = "Belum diisi (Klik 'Sunting Profil' untuk mengisi judul skripsi)";
+                    j.className = "font-semibold text-slate-100 italic opacity-80";
+                }
+            }
+
+            if (p) {
+                if (appData.profile.peneliti && appData.profile.peneliti.trim() !== "") {
+                    p.innerText = appData.profile.peneliti;
+                    p.className = "font-medium text-slate-200";
+                } else {
+                    p.innerText = "Belum diisi";
+                    p.className = "font-medium text-slate-200 italic opacity-80";
+                }
+            }
+
+            if (n) {
+                if (appData.profile.nim && appData.profile.nim.trim() !== "") {
+                    n.innerText = appData.profile.nim;
+                    n.className = "font-mono text-slate-300";
+                } else {
+                    n.innerText = "-";
+                    n.className = "font-mono text-slate-300 italic opacity-80";
+                }
+            }
+        }
+
+        function openProfileMetaModal() {
+            if (!appData.profile) appData.profile = { judul: "", peneliti: "", nim: "" };
+            document.getElementById('meta-judul').value = appData.profile.judul || "";
+            document.getElementById('meta-peneliti').value = appData.profile.peneliti || "";
+            document.getElementById('meta-nim').value = appData.profile.nim || "";
+            openModal('modal-meta');
+        }
+
+        function saveProfileMeta(e) {
+            e.preventDefault();
+            appData.profile = {
+                judul: document.getElementById('meta-judul').value.trim(),
+                peneliti: document.getElementById('meta-peneliti').value.trim(),
+                nim: document.getElementById('meta-nim').value.trim()
+            };
+            saveData();
+            closeModal('modal-meta');
+            showToast("Informasi Meta Skripsi diperbarui!");
+        }
+
+        function saveCustomUsername() {
+            const input = document.getElementById('settings-username-input');
+            if (input && input.value.trim()) {
+                appData.username = input.value.trim();
+                saveData();
+                showToast("Nama pengguna diperbarui!");
+            }
+        }
+
+        function showToast(message, undoCallback = null) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between text-sm pointer-events-auto transition-all duration-300 opacity-0 translate-y-4 w-full`;
+            toast.innerHTML = `
+                <span class="flex-1 pr-2 leading-tight">${escapeHTML(message)}</span>
+                ${undoCallback ? `<button id="btn-${toastId}" class="text-emerald-400 font-bold hover:text-emerald-300 border-l border-slate-600 pl-3 flex-shrink-0">Batal (Undo)</button>` : ''}
+            `;
+            container.appendChild(toast);
+            if(undoCallback) {
+                const undoBtn = document.getElementById(`btn-${toastId}`);
+                if (undoBtn) {
+                    undoBtn.addEventListener('click', () => {
+                        undoCallback();
+                        toast.classList.add('opacity-0');
+                        setTimeout(() => toast.remove(), 300);
+                    });
+                }
+            }
+            requestAnimationFrame(() => toast.classList.remove('opacity-0', 'translate-y-4'));
+            setTimeout(() => {
+                const currentToast = document.getElementById(toastId);
+                if (currentToast) {
+                    currentToast.classList.add('opacity-0');
+                    setTimeout(() => currentToast?.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // --- GLOBAL KEYBOARD SHORTCUTS & UNSAVED GUARD ---
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveDocumentData();
+            }
+        });
+
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'Draf Anda belum disinkronkan. Yakin ingin keluar?';
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            populateStageDropdowns();
+            switchTab('dashboard');
+            window.renderAllData();
+            checkUpcomingNotifications();
+            updateSidebarUserDisplay();
+            updateProfileMetaUI();
+
+            document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('hidden');
+            });
+            
+            setTimeout(() => {
+                const isTourSeenLocally = localStorage.getItem('skripsi_tour_seen') === 'true';
+                if (!isTourSeenLocally && (!appData.settings || appData.settings.hasSeenTour !== true)) {
+                    openOnboardingTour();
+                } else {
+                    document.getElementById('onboarding-guide').classList.add('hidden');
+                }
+            }, 1000);
+        });
+
+        function populateStageDropdowns() {
+            const taskStageSelect = document.getElementById('task-stage');
+            const filterStageSelect = document.getElementById('filter-task-stage');
+            if (!taskStageSelect || !filterStageSelect) return;
+            taskStageSelect.innerHTML = '';
+            filterStageSelect.innerHTML = '<option value="ALL">Semua Tahap</option>';
+            ROADMAP_STAGES.forEach(stage => {
+                const opt = `<option value="${stage.id}">Tahap ${stage.id}: ${stage.name}</option>`;
+                taskStageSelect.innerHTML += opt;
+                filterStageSelect.innerHTML += opt;
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-white');
+                if (el.getAttribute('data-tab') === tabId) el.classList.add('bg-slate-800', 'text-white');
+            });
+
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) {
+                target.classList.remove('hidden');
+                if (tabId === 'documents') {
+                    setTimeout(() => renderStudioDokumen(), 50);
+                }
+            }
+            if (window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
+        }
+
+        // --- STUDIO DOKUMEN LOGIC ---
+        function changeDocMode(mode) {
+            saveCurrentEditorStateToMemory();
+            currentDocMode = mode;
+            if (mode === 'proposal') currentDocSubtab = 'bab1';
+            else if (mode === 'skripsi') currentDocSubtab = 'bab4';
+            else currentDocSubtab = 'naskah';
+
+            renderStudioDokumen();
+        }
+
+        function switchDocSubtab(subtab) {
+            saveCurrentEditorStateToMemory();
+            currentDocSubtab = subtab;
+            renderStudioDokumen();
+        }
+
+        function saveCurrentEditorStateToMemory() {
+            if (!editorMainDoc || !editorGuideline) return;
+            if (!appData.documents) appData.documents = { proposal: {}, skripsi: {}, artikel: {} };
+            if (!appData.documents[currentDocMode]) appData.documents[currentDocMode] = {};
+            
+            appData.documents[currentDocMode][currentDocSubtab] = editorMainDoc.root.innerHTML;
+
+            if (!appData.guidelines || typeof appData.guidelines === 'string') {
+                appData.guidelines = { proposal: "", skripsi: "", artikel: "" };
+            }
+            appData.guidelines[currentDocMode] = editorGuideline.root.innerHTML;
+        }
+
+        function renderStudioDokumen() {
+            initQuillEditors();
+            const subtabsContainer = document.getElementById('doc-subtabs-container');
+            const panelTitle = document.getElementById('doc-panel-title');
+            const focusDesc = document.getElementById('doc-mode-focus-desc');
+            const pullBtn = document.getElementById('btn-pull-synthesis');
+
+            if (currentDocMode === 'proposal') {
+                if (pullBtn) pullBtn.classList.add('hidden');
+                if (focusDesc) focusDesc.innerHTML = `<strong>Fokus Mode Proposal:</strong> Bab 1 (Latar Belakang), Bab 2 (Kajian Pustaka), Bab 3 (Metodologi Non-PTK & Kisi-kisi).`;
+                if (subtabsContainer) {
+                    subtabsContainer.innerHTML = `
+                        <button onclick="switchDocSubtab('bab1')" class="px-3 py-1.5 text-xs font-semibold rounded-t-lg transition border-b-2 ${currentDocSubtab === 'bab1' ? 'border-emerald-600 bg-white text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}">Bab 1: Pendahuluan</button>
+                        <button onclick="switchDocSubtab('bab2')" class="px-3 py-1.5 text-xs font-semibold rounded-t-lg transition border-b-2 ${currentDocSubtab === 'bab2' ? 'border-emerald-600 bg-white text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}">Bab 2: Kajian Pustaka</button>
+                        <button onclick="switchDocSubtab('bab3')" class="px-3 py-1.5 text-xs font-semibold rounded-t-lg transition border-b-2 ${currentDocSubtab === 'bab3' ? 'border-emerald-600 bg-white text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}">Bab 3: Metodologi</button>
+                    `;
+                }
+            } else if (currentDocMode === 'skripsi') {
+                if (pullBtn) pullBtn.classList.add('hidden');
+                if (focusDesc) focusDesc.innerHTML = `<strong>Fokus Mode Skripsi Utuh:</strong> Bab 4 (Hasil & Pembahasan Lapangan), Bab 5 (Kesimpulan & Saran).`;
+                if (subtabsContainer) {
+                    subtabsContainer.innerHTML = `
+                        <button onclick="switchDocSubtab('bab4')" class="px-3 py-1.5 text-xs font-semibold rounded-t-lg transition border-b-2 ${currentDocSubtab === 'bab4' ? 'border-emerald-600 bg-white text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}">Bab 4: Hasil & Pembahasan</button>
+                        <button onclick="switchDocSubtab('bab5')" class="px-3 py-1.5 text-xs font-semibold rounded-t-lg transition border-b-2 ${currentDocSubtab === 'bab5' ? 'border-emerald-600 bg-white text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}">Bab 5: Penutup & Saran</button>
+                    `;
+                }
+            } else {
+                if (pullBtn) pullBtn.classList.remove('hidden');
+                if (focusDesc) focusDesc.innerHTML = `<strong>Fokus Mode Artikel Ilmiah:</strong> Sintesis Temuan Utama, Abstrak, Pendahuluan & Metode Singkat ke Jurnal Publikasi.`;
+                if (subtabsContainer) {
+                    subtabsContainer.innerHTML = `
+                        <button onclick="switchDocSubtab('naskah')" class="px-3 py-1.5 text-xs font-semibold rounded-t-lg transition border-b-2 ${currentDocSubtab === 'naskah' ? 'border-emerald-600 bg-white text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700'}">Draf Naskah Jurnal</button>
+                    `;
+                }
+            }
+
+            if (panelTitle) panelTitle.innerHTML = `<i data-lucide="edit-3" class="w-4 h-4"></i> Area Pengetikan ${currentDocMode.toUpperCase()} (${currentDocSubtab.toUpperCase()})`;
+
+            if (!appData.documents) appData.documents = { proposal: {}, skripsi: {}, artikel: {} };
+            if (!appData.documents[currentDocMode]) appData.documents[currentDocMode] = {};
+
+            const content = appData.documents[currentDocMode][currentDocSubtab] || '';
+            if (editorMainDoc) editorMainDoc.root.innerHTML = content;
+
+            if (!appData.guidelines || typeof appData.guidelines === 'string') {
+                appData.guidelines = { proposal: "", skripsi: "", artikel: "" };
+            }
+            if (editorGuideline) editorGuideline.root.innerHTML = appData.guidelines[currentDocMode] || '';
+            lucide.createIcons();
+        }
+
+        function saveDocumentData(isSilent = false) {
+            saveCurrentEditorStateToMemory();
+            saveData();
+            if (!isSilent) showToast("Draf Dokumen Berhasil Disimpan!");
+        }
+
+        function saveGuidelineData() {
+            saveCurrentEditorStateToMemory();
+            saveData();
+            showToast("Ketentuan kampus disimpan!");
+        }
+
+        function triggerSynthesisForArticle() {
+            if (!appData.documents) return;
+            const b1 = appData.documents.proposal?.bab1 || "<p>Latar belakang belum diisi.</p>";
+            const b4 = appData.documents.skripsi?.bab4 || "<p>Hasil penelitian belum diisi.</p>";
+            const b5 = appData.documents.skripsi?.bab5 || "<p>Kesimpulan belum diisi.</p>";
+
+            const synthesisHTML = `
+                <h2>ABSTRAK & PENDAHULUAN RINGKAS</h2>
+                ${b1}
+                <hr>
+                <h2>HASIL PENELITIAN & PEMBAHASAN UTAMA</h2>
+                ${b4}
+                <hr>
+                <h2>KESIMPULAN PUBLIKASI</h2>
+                ${b5}
+            `;
+            if (editorMainDoc) editorMainDoc.root.innerHTML = synthesisHTML;
+            saveCurrentEditorStateToMemory();
+            showToast("Poin penting dari Bab 1, 4, dan 5 berhasil ditarik ke Artikel!");
+        }
+
+        function exportDocToWord() {
+            saveCurrentEditorStateToMemory();
+            const modeSelect = document.getElementById('doc-mode-select');
+            const mode = modeSelect ? modeSelect.value : 'proposal';
+            const html = editorMainDoc ? editorMainDoc.root.innerHTML : '';
+            
+            const meta = appData.profile || { judul: "Judul Skripsi", peneliti: "Mahasiswa", nim: "-" };
+            
+            const fullHTML = `
+                <div style="font-family: 'Times New Roman', serif; text-align: center; margin-bottom: 24px;">
+                    <h2 style="margin: 0; font-size: 16pt;">DRAF PENELITIAN SKRIPSI (${mode.toUpperCase()})</h2>
+                    <h3 style="margin: 8px 0; font-size: 14pt;">${escapeHTML(meta.judul || "Judul Belum Diisi")}</h3>
+                    <p style="margin: 0; font-size: 12pt;">Peneliti: ${escapeHTML(meta.peneliti || "Nama Belum Diisi")} | NIM: ${escapeHTML(meta.nim || "-")}</p>
+                    <p style="margin: 0; font-size: 11pt; color: #555;">Program Studi Pendidikan Guru Sekolah Dasar (PGSD)</p>
+                    <hr style="margin-top: 12px; border: 1px solid black;">
+                </div>
+                ${html}
+            `;
+            exportHTMLToWord(fullHTML, `Draf_${mode.toUpperCase()}_${currentDocSubtab.toUpperCase()}_PGSD`);
+        }
+
+        function switchProblemSubtab(sub) {
+            const btnTopics = document.getElementById('subtab-btn-topics');
+            const btnCompare = document.getElementById('subtab-btn-compare');
+            const contentTopics = document.getElementById('subtab-content-topics');
+            const contentCompare = document.getElementById('subtab-content-compare');
+
+            if (sub === 'topics') {
+                if(btnTopics) btnTopics.className = "py-2 px-1 border-b-2 border-emerald-600 font-semibold text-sm text-emerald-600";
+                if(btnCompare) btnCompare.className = "py-2 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700";
+                if(contentTopics) contentTopics.classList.remove('hidden');
+                if(contentCompare) contentCompare.classList.add('hidden');
+            } else {
+                if(btnCompare) btnCompare.className = "py-2 px-1 border-b-2 border-emerald-600 font-semibold text-sm text-emerald-600";
+                if(btnTopics) btnTopics.className = "py-2 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700";
+                if(contentCompare) contentCompare.classList.remove('hidden');
+                if(contentTopics) contentTopics.classList.add('hidden');
+                renderMatrixComparison();
+            }
+        }
+
+        function switchTopicFormTab(step) {
+            const btn1 = document.getElementById('topic-tab-btn-1');
+            const btn2 = document.getElementById('topic-tab-btn-2');
+            const step1 = document.getElementById('topic-form-step-1');
+            const step2 = document.getElementById('topic-form-step-2');
+
+            if (step === 1) {
+                if(btn1) btn1.className = "pb-2 border-b-2 border-emerald-600 text-emerald-600";
+                if(btn2) btn2.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600";
+                if(step1) step1.classList.remove('hidden');
+                if(step2) step2.classList.add('hidden');
+            } else {
+                if(btn2) btn2.className = "pb-2 border-b-2 border-emerald-600 text-emerald-600";
+                if(btn1) btn1.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600";
+                if(step2) step2.classList.remove('hidden');
+                if(step1) step1.classList.add('hidden');
+            }
+        }
+
+        window.renderAllData = function() {
+            updateDashboardMetrics();
+            renderRoadmap();
+            renderVisualStepper();
+            renderAllTaskViews();
+            renderTopicsList();
+            renderLiteratureList();
+            renderLogbook();
+            renderWorklog();
+        }
+
+        function renderAllTaskViews() {
+            renderTaskList();
+            renderKanbanBoard();
+        }
+
+        function checkUpcomingNotifications() {
+            if (!appData || !Array.isArray(appData.tasks)) return;
+            const today = new Date().toISOString().split('T')[0];
+            const overdue = appData.tasks.filter(t => t.deadline && t.deadline < today && t.status !== 'Selesai');
+            const upcoming = appData.tasks.filter(t => {
+                if (!t.deadline || t.status === 'Selesai') return false;
+                const diff = (new Date(t.deadline) - new Date(today)) / (1000 * 3600 * 24);
+                return diff >= 0 && diff <= 3;
+            });
+
+            const banner = document.getElementById('top-alert-banner');
+            if (!banner) return;
+            if (overdue.length > 0 || upcoming.length > 0) {
+                banner.classList.remove('hidden');
+                banner.innerHTML = `
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl text-amber-900 text-xs flex justify-between items-center shadow-sm">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="bell" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+                            <div>
+                                <strong>Peringatan Tenggat:</strong>
+                                ${overdue.length > 0 ? `<span class="text-rose-600 font-semibold ml-1">${overdue.length} tugas terlambat!</span>` : ''}
+                                ${upcoming.length > 0 ? `<span class="text-amber-700 ml-1">${upcoming.length} tugas mendesak.</span>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('top-alert-banner').classList.add('hidden')" class="text-amber-500 hover:text-amber-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                `;
+                lucide.createIcons();
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function updateDashboardMetrics() {
+            if (!appData) appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            if (!Array.isArray(appData.tasks)) appData.tasks = [];
+            if (!Array.isArray(appData.logbook)) appData.logbook = [];
+            if (!Array.isArray(appData.worklogs)) appData.worklogs = [];
+
+            const stageId = parseInt(appData.currentStageId) || 1;
+            const currentStageObj = ROADMAP_STAGES.find(s => s.id === stageId) || ROADMAP_STAGES[0];
+            
+            const stageTitleEl = document.getElementById('dash-current-stage');
+            const stageSubEl = document.getElementById('dash-current-stage-sub');
+            if (stageTitleEl) stageTitleEl.innerText = currentStageObj.name;
+            if (stageSubEl) stageSubEl.innerText = `Tahap ${currentStageObj.id} dari ${ROADMAP_STAGES.length}`;
+
+            const totalTasks = appData.tasks.length;
+            const completedTasks = appData.tasks.filter(t => t.status === 'Selesai').length;
+            const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            const pctEl = document.getElementById('dash-progress-percent');
+            const countEl = document.getElementById('dash-progress-count');
+            const barEl = document.getElementById('dash-progress-bar');
+            
+            if (pctEl) pctEl.innerText = `${percent}%`;
+            if (countEl) countEl.innerText = `${completedTasks}/${totalTasks} Tugas`;
+            if (barEl) barEl.style.width = `${percent}%`;
+
+            const today = new Date().toISOString().split('T')[0];
+            const overdue = appData.tasks.filter(t => t.deadline && t.deadline < today && t.status !== 'Selesai');
+            const overdueEl = document.getElementById('dash-overdue-count');
+            if (overdueEl) overdueEl.innerText = `${overdue.length} Terlambat`;
+
+            const activeDeadlines = appData.tasks
+                .filter(t => t.deadline && t.status !== 'Selesai')
+                .sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+            
+            const deadlineEl = document.getElementById('dash-upcoming-deadline');
+            if (deadlineEl) {
+                if (activeDeadlines.length > 0) {
+                    deadlineEl.innerText = `${escapeHTML(activeDeadlines[0].name)} (${activeDeadlines[0].deadline})`;
+                } else {
+                    deadlineEl.innerText = "Tidak ada tenggat mendatang";
+                }
+            }
+
+            const nextTasksContainer = document.getElementById('dash-next-tasks-list');
+            if (nextTasksContainer) {
+                const pendingTasks = appData.tasks.filter(t => t.status !== 'Selesai').slice(0, 3);
+                if (pendingTasks.length === 0) {
+                    nextTasksContainer.innerHTML = `<p class="text-xs text-slate-400 italic">Tidak ada tugas tertunda.</p>`;
+                } else {
+                    nextTasksContainer.innerHTML = pendingTasks.map(t => `
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
+                            <div class="space-y-1">
+                                <span class="font-semibold text-slate-800 block truncate max-w-[200px]">${escapeHTML(t.name)}</span>
+                                <span class="text-slate-500">Tahap ${t.stageId} • Prioritas: <span class="font-medium text-slate-700">${t.priority}</span></span>
+                            </div>
+                            <button onclick="quickCompleteTask('${t.id}')" class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-medium rounded text-[11px] transition whitespace-nowrap">
+                                Tandai Selesai
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const questionsContainer = document.getElementById('dash-unanswered-questions');
+            if (questionsContainer) {
+                const latestLog = appData.logbook[0];
+                const latestWork = appData.worklogs[0];
+                let questionsHTML = '';
+                if (latestLog && latestLog.nextAction) {
+                    questionsHTML += `<div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg"><strong>Tindak Lanjut Diskusi:</strong> ${escapeHTML(latestLog.nextAction)}</div>`;
+                }
+                if (latestWork && latestWork.barriers) {
+                    questionsHTML += `<div class="p-2.5 bg-rose-50 border border-rose-200 rounded-lg"><strong>Kendala Terakhir:</strong> ${escapeHTML(latestWork.barriers)}</div>`;
+                }
+                if (!questionsHTML) questionsHTML = `<p class="text-xs text-slate-400 italic">Belum ada hambatan yang dicatat.</p>`;
+                questionsContainer.innerHTML = questionsHTML;
+            }
+
+            const stageBreakdownContainer = document.getElementById('dash-stage-breakdown');
+            if (stageBreakdownContainer) {
+                stageBreakdownContainer.innerHTML = ROADMAP_STAGES.slice(0, 5).map(s => {
+                    const stageTasks = appData.tasks.filter(t => t.stageId === s.id);
+                    const done = stageTasks.filter(t => t.status === 'Selesai').length;
+                    const total = stageTasks.length;
+                    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                    return `
+                        <div class="text-xs space-y-1">
+                            <div class="flex justify-between text-slate-600">
+                                <span class="truncate max-w-[180px]">T${s.id}: ${s.name}</span>
+                                <span class="font-mono">${done}/${total}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-sky-500 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function renderVisualStepper() {
+            const container = document.getElementById('visual-stepper-container');
+            if (!container) return;
+            const currentId = parseInt(appData.currentStageId) || 1;
+            container.innerHTML = ROADMAP_STAGES.map(s => {
+                const isCurrent = s.id === currentId;
+                const isDone = s.id < currentId;
+                return `
+                    <div onclick="setCurrentStage(${s.id})" class="cursor-pointer group flex flex-col items-center">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${isCurrent ? 'bg-emerald-600 text-white ring-4 ring-emerald-100 scale-110' : (isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200')}">
+                            ${s.id}
+                        </div>
+                        <span class="text-[10px] font-medium mt-1 truncate max-w-[60px] ${isCurrent ? 'text-emerald-700 font-bold' : 'text-slate-400'}">Tahap ${s.id}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderRoadmap() {
+            const container = document.getElementById('roadmap-stages-container');
+            if (!container) return;
+            const currentId = parseInt(appData.currentStageId) || 1;
+            container.innerHTML = ROADMAP_STAGES.map(stage => {
+                const isCurrent = stage.id === currentId;
+                const stageTasks = (appData.tasks || []).filter(t => t.stageId === stage.id);
+                const completedCount = stageTasks.filter(t => t.status === 'Selesai').length;
+
+                return `
+                    <div class="bg-white rounded-xl border ${isCurrent ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-200'} p-5 shadow-sm space-y-3">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-8 h-8 rounded-full ${isCurrent ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'} font-bold text-xs flex items-center justify-center">
+                                    ${stage.id}
+                                </span>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                        ${stage.name}
+                                        ${isCurrent ? '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold uppercase">Tahap Aktif</span>' : ''}
+                                    </h3>
+                                    <p class="text-xs text-slate-500">${stage.desc}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-slate-500">${completedCount}/${stageTasks.length} Selesai</span>
+                                ${!isCurrent ? `<button onclick="setCurrentStage(${stage.id})" class="text-xs bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 px-3 py-1 rounded-lg font-medium transition">Fokus Ke Tahap Ini</button>` : ''}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Daftar Tugas Tahap Ini:</h4>
+                            ${stageTasks.length === 0 ? '<p class="text-xs text-slate-400 italic">Belum ada tugas.</p>' : ''}
+                            ${stageTasks.map(t => `
+                                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="${t.status === 'Selesai' ? 'check-circle-2' : 'circle'}" class="w-4 h-4 ${t.status === 'Selesai' ? 'text-emerald-500' : 'text-slate-400'}"></i>
+                                        <span class="${t.status === 'Selesai' ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${escapeHTML(t.name)}</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded text-[10px] ${getStatusBadgeClass(t.status)}">${t.status}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function setCurrentStage(id) {
+            appData.currentStageId = parseInt(id) || 1;
+            saveData();
+            renderRoadmap();
+            renderVisualStepper();
+        }
+
+        function switchTaskView(view) {
+            const btnList = document.getElementById('task-view-btn-list');
+            const btnKanban = document.getElementById('task-view-btn-kanban');
+            const viewList = document.getElementById('task-view-list');
+            const viewKanban = document.getElementById('task-view-kanban');
+
+            if (view === 'list') {
+                if(btnList) btnList.className = "py-2 px-1 border-b-2 border-emerald-600 font-semibold text-sm text-emerald-600";
+                if(btnKanban) btnKanban.className = "py-2 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700";
+                if(viewList) viewList.classList.remove('hidden');
+                if(viewKanban) viewKanban.classList.add('hidden');
+            } else {
+                if(btnKanban) btnKanban.className = "py-2 px-1 border-b-2 border-emerald-600 font-semibold text-sm text-emerald-600";
+                if(btnList) btnList.className = "py-2 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700";
+                if(viewKanban) viewKanban.classList.remove('hidden');
+                if(viewList) viewList.classList.add('hidden');
+            }
+        }
+
+        function renderTaskList() {
+            const stageFilter = document.getElementById('filter-task-stage')?.value || 'ALL';
+            const statusFilter = document.getElementById('filter-task-status')?.value || 'ALL';
+            const priorityFilter = document.getElementById('filter-task-priority')?.value || 'ALL';
+            const searchQuery = (document.getElementById('filter-task-search')?.value || '').toLowerCase();
+
+            const filtered = (appData.tasks || []).filter(t => {
+                const matchStage = stageFilter === 'ALL' || t.stageId == stageFilter;
+                const matchStatus = statusFilter === 'ALL' || t.status === statusFilter;
+                const matchPriority = priorityFilter === 'ALL' || t.priority === priorityFilter;
+                const matchSearch = t.name.toLowerCase().includes(searchQuery);
+                return matchStage && matchStatus && matchPriority && matchSearch;
+            });
+
+            const tbody = document.getElementById('task-table-body');
+            if (!tbody) return;
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-400 text-xs italic">Tidak ada tugas ditemukan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(t => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="p-4">
+                        <select onchange="updateTaskStatus('${t.id}', this.value)" class="text-xs border border-slate-200 rounded px-2 py-1 bg-white focus:outline-none">
+                            <option value="Belum dikerjakan" ${t.status === 'Belum dikerjakan' ? 'selected' : ''}>Belum dikerjakan</option>
+                            <option value="Sedang dikerjakan" ${t.status === 'Sedang dikerjakan' ? 'selected' : ''}>Sedang dikerjakan</option>
+                            <option value="Menunggu" ${t.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
+                            <option value="Selesai" ${t.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                        </select>
+                    </td>
+                    <td class="p-4">
+                        <div class="space-y-1">
+                            <span class="font-semibold text-slate-800 ${t.status === 'Selesai' ? 'line-through text-slate-400' : ''}">${escapeHTML(t.name)}</span>
+                            ${t.doneCriteria ? `<p class="text-[11px] text-slate-500"><strong>Target:</strong> ${escapeHTML(t.doneCriteria)}</p>` : ''}
+                            ${t.status === 'Selesai' && t.nextStep ? `<p class="text-[11px] text-emerald-700 bg-emerald-50 p-1.5 rounded mt-1"><strong>Berikutnya:</strong> ${escapeHTML(t.nextStep)}</p>` : ''}
+                            
+                            <div class="pt-2 space-y-1">
+                                ${t.subtasks && t.subtasks.length > 0 ? t.subtasks.map(st => `
+                                    <div class="flex items-center justify-between text-xs py-1 group">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${t.id}', '${st.id}')" class="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                            <span class="${st.completed ? 'line-through text-slate-400' : 'text-slate-600'}">${escapeHTML(st.name)}</span>
+                                        </div>
+                                        <div class="opacity-0 group-hover:opacity-100 flex space-x-1">
+                                            <button onclick="openSubtaskModal('${t.id}', '${st.id}')" class="text-slate-400 hover:text-emerald-600" title="Edit Subtugas"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                                            <button onclick="deleteSubtask('${t.id}', '${st.id}')" class="text-slate-400 hover:text-rose-600" title="Hapus Subtugas"><i data-lucide="trash" class="w-3 h-3"></i></button>
+                                        </div>
+                                    </div>
+                                `).join('') : ''}
+                                <button onclick="openSubtaskModal('${t.id}')" class="text-[11px] text-slate-400 hover:text-emerald-600 flex items-center gap-1 mt-1 font-medium border border-slate-200 px-2 py-0.5 rounded border-dashed">+ Tambah Subtugas</button>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-4 text-xs font-medium text-slate-600">Tahap ${t.stageId}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded text-[10px] font-semibold ${getPriorityBadgeClass(t.priority)}">${t.priority}</span>
+                    </td>
+                    <td class="p-4 text-xs space-y-0.5">
+                        <div class="font-mono ${isOverdue(t.deadline, t.status) ? 'text-rose-600 font-bold' : 'text-slate-700'}">${t.deadline || '-'}</div>
+                        <div class="text-[10px] text-slate-400">${t.deadlineType || 'Target'}</div>
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="editTask('${t.id}')" class="text-slate-400 hover:text-slate-600"><i data-lucide="edit-3" class="w-4 h-4 inline"></i></button>
+                        <button onclick="deleteTask('${t.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4 inline"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderKanbanBoard() {
+            const container = document.getElementById('kanban-container');
+            if (!container) return;
+            const statuses = ["Belum dikerjakan", "Sedang dikerjakan", "Menunggu", "Selesai"];
+            
+            const stageFilter = document.getElementById('filter-task-stage')?.value || 'ALL';
+            const priorityFilter = document.getElementById('filter-task-priority')?.value || 'ALL';
+            const searchQuery = (document.getElementById('filter-task-search')?.value || '').toLowerCase();
+
+            const filteredTasks = (appData.tasks || []).filter(t => {
+                const matchStage = stageFilter === 'ALL' || t.stageId == stageFilter;
+                const matchPriority = priorityFilter === 'ALL' || t.priority === priorityFilter;
+                const matchSearch = t.name.toLowerCase().includes(searchQuery);
+                return matchStage && matchPriority && matchSearch;
+            });
+
+            container.innerHTML = statuses.map((status, statusIdx) => {
+                const tasksInStatus = filteredTasks.filter(t => t.status === status);
+                return `
+                    <div class="flex-1 min-w-[250px] bg-slate-100/50 rounded-xl p-3 flex flex-col" 
+                         ondrop="drop(event, '${status}')" ondragover="allowDrop(event)">
+                        <div class="flex justify-between items-center mb-3 px-1">
+                            <h3 class="font-bold text-slate-700 text-sm">${status}</h3>
+                            <span class="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-mono">${tasksInStatus.length}</span>
+                        </div>
+                        <div class="flex-1 space-y-3 overflow-y-auto">
+                            ${tasksInStatus.map(t => `
+                                <div id="${t.id}" draggable="true" ondragstart="drag(event)" 
+                                     class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-emerald-300 transition group relative">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold ${getPriorityBadgeClass(t.priority)}">${t.priority}</span>
+                                        <button onclick="editTask('${t.id}')" class="text-slate-400 hover:text-emerald-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-800 leading-snug ${t.status === 'Selesai' ? 'line-through text-slate-400' : ''}">${escapeHTML(t.name)}</p>
+                                    
+                                    <div class="mt-2 pt-2 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-500">
+                                        <div class="flex space-x-1 z-10">
+                                            ${statusIdx > 0 ? `<button onclick="moveTaskKanban('${t.id}', -1)" title="Pindah Kiri" class="p-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 font-bold">&larr;</button>` : ''}
+                                            ${statusIdx < statuses.length - 1 ? `<button onclick="moveTaskKanban('${t.id}', 1)" title="Pindah Kanan" class="p-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 font-bold">&rarr;</button>` : ''}
+                                        </div>
+                                        ${t.deadline ? `<span class="${isOverdue(t.deadline, t.status) ? 'text-rose-600 font-bold' : ''}">${t.deadline}</span>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                            ${tasksInStatus.length === 0 ? `<div class="h-16 flex items-center justify-center text-xs text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">Kosong</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("taskId", ev.target.id); }
+        function drop(ev, newStatus) {
+            ev.preventDefault();
+            const taskId = ev.dataTransfer.getData("taskId");
+            if(taskId) updateTaskStatus(taskId, newStatus);
+        }
+
+        function moveTaskKanban(taskId, direction) {
+            const statuses = ["Belum dikerjakan", "Sedang dikerjakan", "Menunggu", "Selesai"];
+            const t = (appData.tasks || []).find(x => x.id === taskId);
+            if (t) {
+                const currentIndex = statuses.indexOf(t.status);
+                const nextIndex = currentIndex + direction;
+                if (nextIndex >= 0 && nextIndex < statuses.length) {
+                    t.status = statuses[nextIndex];
+                    saveData();
+                    renderAllTaskViews();
+                }
+            }
+        }
+
+        function getPriorityBadgeClass(p) {
+            switch(p) {
+                case 'Tinggi': return 'bg-rose-100 text-rose-700';
+                case 'Sedang': return 'bg-amber-100 text-amber-700';
+                default: return 'bg-slate-100 text-slate-600';
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Selesai': return 'bg-emerald-100 text-emerald-700';
+                case 'Sedang dikerjakan': return 'bg-sky-100 text-sky-700';
+                case 'Menunggu': return 'bg-amber-100 text-amber-700';
+                default: return 'bg-slate-100 text-slate-600';
+            }
+        }
+
+        function isOverdue(deadline, status) {
+            if (!deadline || status === 'Selesai') return false;
+            const today = new Date().toISOString().split('T')[0];
+            return deadline < today;
+        }
+
+        function updateTaskStatus(taskId, status) {
+            const t = (appData.tasks || []).find(x => x.id === taskId);
+            if (t) {
+                t.status = status;
+                saveData();
+                renderAllTaskViews();
+            }
+        }
+
+        function quickCompleteTask(taskId) { updateTaskStatus(taskId, 'Selesai'); }
+
+        function toggleSubtask(taskId, subtaskId) {
+            const task = (appData.tasks || []).find(t => t.id === taskId);
+            if (task) {
+                const st = (task.subtasks || []).find(s => s.id === subtaskId);
+                if (st) st.completed = !st.completed;
+                saveData();
+                renderAllTaskViews();
+            }
+        }
+
+        function openSubtaskModal(taskId, subtaskId = null) {
+            document.getElementById('form-subtask').reset();
+            document.getElementById('subtask-task-id').value = taskId;
+            document.getElementById('subtask-id').value = '';
+            
+            if (subtaskId) {
+                const task = (appData.tasks || []).find(t => t.id === taskId);
+                if (task && task.subtasks) {
+                    const st = task.subtasks.find(s => s.id === subtaskId);
+                    if (st) {
+                        document.getElementById('subtask-id').value = st.id;
+                        document.getElementById('subtask-name').value = st.name;
+                    }
+                }
+            }
+            openModal('modal-subtask');
+        }
+
+        function saveSubtask(e) {
+            e.preventDefault();
+            const taskId = document.getElementById('subtask-task-id').value;
+            const subtaskId = document.getElementById('subtask-id').value;
+            const name = document.getElementById('subtask-name').value.trim();
+            if (!name) { showToast("Nama subtugas tidak boleh kosong."); return; }
+
+            const task = (appData.tasks || []).find(t => t.id === taskId);
+            if (task) {
+                if (!task.subtasks) task.subtasks = [];
+                if (subtaskId) {
+                    const st = task.subtasks.find(s => s.id === subtaskId);
+                    if (st) st.name = name;
+                } else {
+                    task.subtasks.push({ id: `st-${Date.now()}`, name: name, completed: false });
+                }
+                saveData();
+                renderAllTaskViews();
+                closeModal('modal-subtask');
+                showToast("Subtugas disimpan.");
+            }
+        }
+
+        function deleteSubtask(taskId, subtaskId) {
+            const task = (appData.tasks || []).find(t => t.id === taskId);
+            if (task && task.subtasks) {
+                const backupList = JSON.parse(JSON.stringify(task.subtasks));
+                task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
+                saveData();
+                renderAllTaskViews();
+                showToast("Subtugas dihapus.", () => {
+                    task.subtasks = backupList;
+                    saveData();
+                    renderAllTaskViews();
+                });
+            }
+        }
+
+        function openTaskModal(taskId = null) {
+            const form = document.getElementById('form-task');
+            form.reset();
+            document.getElementById('task-id').value = '';
+
+            if (taskId) {
+                const t = (appData.tasks || []).find(x => x.id === taskId);
+                if (t) {
+                    document.getElementById('task-id').value = t.id;
+                    document.getElementById('task-name').value = t.name;
+                    document.getElementById('task-stage').value = t.stageId;
+                    document.getElementById('task-status').value = t.status;
+                    document.getElementById('task-priority').value = t.priority;
+                    document.getElementById('task-deadline').value = t.deadline || '';
+                    document.getElementById('task-deadline-type').value = t.deadlineType || 'Target Pribadi';
+                    document.getElementById('task-done-criteria').value = t.doneCriteria || '';
+                    document.getElementById('task-next-step').value = t.nextStep || '';
+                    document.getElementById('task-notes').value = t.notes || '';
+                }
+            }
+            openModal('modal-task');
+        }
+
+        function saveTask(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('task-name').value.trim();
+            if (!nameInput) { showToast("Nama tugas tidak boleh kosong!"); return; }
+            
+            const deadlineInput = document.getElementById('task-deadline').value;
+            if (deadlineInput) {
+                const yr = new Date(deadlineInput).getFullYear();
+                if (yr < 2020 || yr > 2050) { showToast("Tahun tenggat tidak masuk akal."); return; }
+            }
+
+            const id = document.getElementById('task-id').value;
+            const taskObj = {
+                id: id || `task-${Date.now()}`,
+                name: nameInput,
+                stageId: parseInt(document.getElementById('task-stage').value),
+                status: document.getElementById('task-status').value,
+                priority: document.getElementById('task-priority').value,
+                deadline: deadlineInput,
+                deadlineType: document.getElementById('task-deadline-type').value,
+                doneCriteria: document.getElementById('task-done-criteria').value,
+                nextStep: document.getElementById('task-next-step').value,
+                notes: document.getElementById('task-notes').value,
+                subtasks: id ? ((appData.tasks || []).find(x => x.id === id)?.subtasks || []) : []
+            };
+
+            if (id) {
+                const index = (appData.tasks || []).findIndex(x => x.id === id);
+                if (index !== -1) appData.tasks[index] = taskObj;
+            } else {
+                if (!Array.isArray(appData.tasks)) appData.tasks = [];
+                appData.tasks.push(taskObj);
+            }
+
+            saveData();
+            closeModal('modal-task');
+            renderAllTaskViews();
+            showToast("Tugas disimpan.");
+        }
+
+        function editTask(id) { openTaskModal(id); }
+
+        function deleteTask(id) {
+            const backupList = JSON.parse(JSON.stringify(appData.tasks || []));
+            appData.tasks = (appData.tasks || []).filter(x => x.id !== id);
+            saveData();
+            renderAllTaskViews();
+            showToast(`Tugas dihapus.`, () => {
+                appData.tasks = backupList;
+                saveData();
+                renderAllTaskViews();
+            });
+        }
+
+        function renderTopicsList() {
+            const container = document.getElementById('topics-cards-container');
+            if (!container) return;
+            if (!appData.topics || appData.topics.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic col-span-2">Belum ada kandidat topik.</p>`;
+                return;
+            }
+
+            container.innerHTML = appData.topics.map((t, idx) => `
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                            Kandidat Topik #${idx + 1}
+                        </span>
+                        <div class="space-x-1">
+                            <button onclick="openTopicModal('${t.id}')" class="text-slate-400 hover:text-slate-600"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteTopic('${t.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-base leading-snug">${escapeHTML(t.title)}</h3>
+                    <div class="text-xs space-y-2 text-slate-600 border-t border-slate-100 pt-3">
+                        <p><strong>Fakta Lapangan:</strong> ${escapeHTML(t.facts) || '-'}</p>
+                        <p><strong>Masalah:</strong> ${escapeHTML(t.problem) || '-'}</p>
+                        <p><strong>Metode:</strong> <span class="text-emerald-700 font-medium">${escapeHTML(t.method) || '-'}</span></p>
+                        <p><strong>Celah Penelitian:</strong> ${escapeHTML(t.gap) || '-'}</p>
+                    </div>
+                    <div class="bg-slate-50 p-2.5 rounded-lg flex justify-between items-center text-xs">
+                        <span class="text-slate-500 font-medium">Rata-rata Skor Kelayakan:</span>
+                        <span class="font-bold text-slate-800 text-sm font-mono">${calculateAverageScore(t.scores)} / 5</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function calculateAverageScore(s) {
+            if (!s) return '0.0';
+            const sum = (s.realProblem || 0) + (s.academicVal || 0) + (s.gap || 0) + (s.methodFit || 0) + (s.feasibility || 0) + (s.defense || 0);
+            return (sum / 6).toFixed(1);
+        }
+
+        function openTopicModal(topicId = null) {
+            document.getElementById('form-topic').reset();
+            document.getElementById('topic-id').value = '';
+            switchTopicFormTab(1);
+
+            if (topicId) {
+                const t = (appData.topics || []).find(x => x.id === topicId);
+                if (t) {
+                    document.getElementById('topic-id').value = t.id;
+                    document.getElementById('topic-title').value = t.title;
+                    document.getElementById('topic-facts').value = t.facts || '';
+                    document.getElementById('topic-problem').value = t.problem || '';
+                    document.getElementById('topic-cause').value = t.cause || '';
+                    document.getElementById('topic-solution').value = t.solution || '';
+                    document.getElementById('topic-method').value = t.method || '';
+                    document.getElementById('topic-gap').value = t.gap || '';
+                    if (t.scores) {
+                        document.getElementById('score-real-problem').value = t.scores.realProblem || 3;
+                        document.getElementById('score-academic-val').value = t.scores.academicVal || 3;
+                        document.getElementById('score-gap').value = t.scores.gap || 3;
+                        document.getElementById('score-method-fit').value = t.scores.methodFit || 3;
+                        document.getElementById('score-feasibility').value = t.scores.feasibility || 3;
+                        document.getElementById('score-defense').value = t.scores.defense || 3;
+                    }
+                }
+            }
+            openModal('modal-topic');
+        }
+
+        function saveTopic(e) {
+            e.preventDefault();
+            const titleInput = document.getElementById('topic-title').value.trim();
+            if (!titleInput) { showToast("Judul tidak boleh kosong."); return; }
+
+            const id = document.getElementById('topic-id').value;
+            const topicObj = {
+                id: id || `top-${Date.now()}`,
+                title: titleInput,
+                facts: document.getElementById('topic-facts').value,
+                problem: document.getElementById('topic-problem').value,
+                cause: document.getElementById('topic-cause').value,
+                solution: document.getElementById('topic-solution').value,
+                method: document.getElementById('topic-method').value,
+                gap: document.getElementById('topic-gap').value,
+                scores: {
+                    realProblem: parseInt(document.getElementById('score-real-problem').value),
+                    academicVal: parseInt(document.getElementById('score-academic-val').value),
+                    gap: parseInt(document.getElementById('score-gap').value),
+                    methodFit: parseInt(document.getElementById('score-method-fit').value),
+                    feasibility: parseInt(document.getElementById('score-feasibility').value),
+                    defense: parseInt(document.getElementById('score-defense').value)
+                }
+            };
+
+            if (!Array.isArray(appData.topics)) appData.topics = [];
+            if (id) {
+                const idx = appData.topics.findIndex(x => x.id === id);
+                if (idx !== -1) appData.topics[idx] = topicObj;
+            } else {
+                appData.topics.push(topicObj);
+            }
+
+            saveData();
+            closeModal('modal-topic');
+            renderTopicsList();
+            showToast("Kandidat topik disimpan.");
+        }
+
+        function deleteTopic(id) {
+            const backupList = JSON.parse(JSON.stringify(appData.topics || []));
+            appData.topics = (appData.topics || []).filter(x => x.id !== id);
+            saveData();
+            renderTopicsList();
+            showToast(`Kandidat topik dihapus.`, () => {
+                appData.topics = backupList;
+                saveData();
+                renderTopicsList();
+            });
+        }
+
+        function renderMatrixComparison() {
+            const list = (appData.topics || []).slice(0, 3);
+            for (let i = 0; i < 3; i++) {
+                const header = document.getElementById(`comp-header-${i+1}`);
+                if (!header) continue;
+                if (list[i]) {
+                    header.innerText = list[i].title.substring(0, 35) + '...';
+                } else {
+                    header.innerText = `Kandidat #${i+1} (Kosong)`;
+                }
+            }
+
+            const criteriaList = [
+                { key: 'realProblem', label: '1. Masalah Nyata Lapangan' },
+                { key: 'academicVal', label: '2. Nilai Akademik / Manfaat' },
+                { key: 'gap', label: '3. Kejelasan Celah Penelitian' },
+                { key: 'methodFit', label: '4. Kecocokan Metode' },
+                { key: 'feasibility', label: '5. Kelayakan Lapangan & Waktu' },
+                { key: 'defense', label: '6. Kekuatan saat Diuji Bimbingan' }
+            ];
+
+            const tbody = document.getElementById('matrix-comparison-body');
+            if (!tbody) return;
+            tbody.innerHTML = criteriaList.map(c => `
+                <tr>
+                    <td class="p-3 font-semibold text-slate-700 bg-slate-50/50 border-r border-slate-200">${c.label}</td>
+                    ${[0, 1, 2].map(idx => {
+                        const topic = list[idx];
+                        const val = topic && topic.scores ? topic.scores[c.key] : '-';
+                        return `<td class="p-3 text-center font-mono font-bold ${val >= 4 ? 'text-emerald-600 bg-emerald-50/30' : 'text-slate-700'}">${val} / 5</td>`;
+                    }).join('')}
+                </tr>
+            `).join('') + `
+                <tr class="bg-slate-100 font-bold border-t-2 border-slate-300 text-slate-800">
+                    <td class="p-3 border-r border-slate-200">RATA-RATA TOTAL SKOR</td>
+                    ${[0, 1, 2].map(idx => {
+                        const topic = list[idx];
+                        const avg = topic ? calculateAverageScore(topic.scores) : '-';
+                        return `<td class="p-3 text-center font-mono text-emerald-700 text-sm">${avg}</td>`;
+                    }).join('')}
+                </tr>
+            `;
+        }
+
+        function renderLiteratureList() {
+            const query = (document.getElementById('lit-search-input')?.value || '').toLowerCase();
+            const accessFilter = document.getElementById('lit-filter-access')?.value || 'ALL';
+
+            const filtered = (appData.literatures || []).filter(l => {
+                const matchSearch = l.title.toLowerCase().includes(query) || (l.authors && l.authors.toLowerCase().includes(query));
+                const matchAccess = accessFilter === 'ALL' || l.access === accessFilter;
+                return matchSearch && matchAccess;
+            });
+
+            const container = document.getElementById('literature-cards-container');
+            if (!container) return;
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic col-span-2">Tidak ada literatur.</p>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(l => `
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-700 px-2 py-0.5 rounded">
+                            ${l.access || 'Open Access'}
+                        </span>
+                        <div class="space-x-1">
+                            <button onclick="openLiteratureModal('${l.id}')" class="text-slate-400 hover:text-slate-600"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteLiterature('${l.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-sm leading-snug">${escapeHTML(l.title)}</h3>
+                    <p class="text-xs text-slate-500 font-medium">${escapeHTML(l.authors) || 'Tanpa Penulis'} (${escapeHTML(l.year) || '-'}) • <em>${escapeHTML(l.journal) || 'Jurnal'}</em></p>
+                    ${l.url ? `<a href="${escapeHTML(l.url)}" target="_blank" class="text-[11px] text-emerald-600 hover:underline flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i> Tautan Sumber</a>` : ''}
+                    <div class="text-xs space-y-2 text-slate-600 border-t border-slate-100 pt-3">
+                        <p><strong>Temuan:</strong> ${escapeHTML(l.findings) || '-'}</p>
+                        <p class="bg-emerald-50/60 p-2 rounded text-emerald-900"><strong>Interpretasi Pribadi & Relevansi ke Skripsi Anda:</strong> ${escapeHTML(l.interpretation) || '-'}</p>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openLiteratureModal(id = null) {
+            document.getElementById('form-literature').reset();
+            document.getElementById('lit-id').value = '';
+
+            if (id) {
+                const l = (appData.literatures || []).find(x => x.id === id);
+                if (l) {
+                    document.getElementById('lit-id').value = l.id;
+                    document.getElementById('lit-title').value = l.title;
+                    document.getElementById('lit-authors').value = l.authors || '';
+                    document.getElementById('lit-year').value = l.year || '';
+                    document.getElementById('lit-journal').value = l.journal || '';
+                    document.getElementById('lit-url').value = l.url || '';
+                    document.getElementById('lit-access').value = l.access || 'Open Access';
+                    document.getElementById('lit-method').value = l.method || '';
+                    document.getElementById('lit-findings').value = l.findings || '';
+                    document.getElementById('lit-interpretation').value = l.interpretation || '';
+                }
+            }
+            openModal('modal-literature');
+        }
+
+        function saveLiterature(e) {
+            e.preventDefault();
+            const titleInput = document.getElementById('lit-title').value.trim();
+            if (!titleInput) { showToast("Judul literatur kosong."); return; }
+
+            const id = document.getElementById('lit-id').value;
+            const litObj = {
+                id: id || `lit-${Date.now()}`,
+                title: titleInput,
+                authors: document.getElementById('lit-authors').value,
+                year: document.getElementById('lit-year').value,
+                journal: document.getElementById('lit-journal').value,
+                url: document.getElementById('lit-url').value,
+                access: document.getElementById('lit-access').value,
+                method: document.getElementById('lit-method').value,
+                findings: document.getElementById('lit-findings').value,
+                interpretation: document.getElementById('lit-interpretation').value
+            };
+
+            if (!Array.isArray(appData.literatures)) appData.literatures = [];
+            if (id) {
+                const idx = appData.literatures.findIndex(x => x.id === id);
+                if (idx !== -1) appData.literatures[idx] = litObj;
+            } else {
+                appData.literatures.push(litObj);
+            }
+            saveData();
+            closeModal('modal-literature');
+            renderLiteratureList();
+            showToast("Literatur disimpan.");
+        }
+
+        function deleteLiterature(id) {
+            const backupList = JSON.parse(JSON.stringify(appData.literatures || []));
+            appData.literatures = (appData.literatures || []).filter(x => x.id !== id);
+            saveData();
+            renderLiteratureList();
+            showToast(`Literatur dihapus.`, () => {
+                appData.literatures = backupList;
+                saveData();
+                renderLiteratureList();
+            });
+        }
+
+        function renderLogbook() {
+            const container = document.getElementById('logbook-container');
+            if (!container) return;
+            if (!appData.logbook || appData.logbook.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada logbook.</p>`;
+                return;
+            }
+
+            container.innerHTML = appData.logbook.map(log => `
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md font-mono">${log.date}</span>
+                        <div class="space-x-1">
+                            <button onclick="openLogbookModal('${log.id}')" class="text-slate-400 hover:text-slate-600"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteLogbook('${log.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-base">${escapeHTML(log.topic)}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-600">
+                        <div class="bg-slate-50 p-3 rounded-lg"><strong class="text-slate-700 block mb-1">Masukan Pembimbing:</strong><div>${log.feedback || '-'}</div></div>
+                        <div class="bg-emerald-50/50 p-3 rounded-lg"><strong class="text-emerald-900 block mb-1">Keputusan & Alasan:</strong><p>${escapeHTML(log.decision) || '-'}</p></div>
+                    </div>
+                    ${log.nextAction ? `<div class="text-xs bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-amber-900"><strong>Tindakan Konkret Sesi Berikutnya:</strong> ${escapeHTML(log.nextAction)}</div>` : ''}
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openLogbookModal(id = null) {
+            initQuillEditors();
+            document.getElementById('form-logbook').reset();
+            document.getElementById('log-id').value = '';
+            document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+            if (editorLogFeedback) editorLogFeedback.root.innerHTML = '';
+            document.getElementById('modal-logbook-title').innerText = id ? 'Edit Logbook Bimbingan' : 'Tambah Logbook Bimbingan';
+
+            if (id) {
+                const log = (appData.logbook || []).find(x => x.id === id);
+                if (log) {
+                    document.getElementById('log-id').value = log.id;
+                    document.getElementById('log-date').value = log.date;
+                    document.getElementById('log-topic').value = log.topic;
+                    if (editorLogFeedback) editorLogFeedback.root.innerHTML = log.feedback || '';
+                    document.getElementById('log-decision').value = log.decision || '';
+                    document.getElementById('log-next-action').value = log.nextAction || '';
+                }
+            }
+            openModal('modal-logbook');
+        }
+
+        function saveLogbook(e) {
+            e.preventDefault();
+            const topicInput = document.getElementById('log-topic').value.trim();
+            if (!topicInput) { showToast("Topik wajib diisi!"); return; }
+
+            if (!Array.isArray(appData.logbook)) appData.logbook = [];
+            const id = document.getElementById('log-id').value;
+            const logObj = {
+                id: id || `log-${Date.now()}`,
+                date: document.getElementById('log-date').value,
+                topic: topicInput,
+                feedback: editorLogFeedback ? editorLogFeedback.root.innerHTML : '',
+                decision: document.getElementById('log-decision').value,
+                nextAction: document.getElementById('log-next-action').value
+            };
+
+            if (id) {
+                const idx = appData.logbook.findIndex(x => x.id === id);
+                if (idx !== -1) appData.logbook[idx] = logObj;
+            } else {
+                appData.logbook.unshift(logObj);
+            }
+
+            saveData();
+            closeModal('modal-logbook');
+            renderLogbook();
+            showToast("Logbook disimpan.");
+        }
+
+        function deleteLogbook(id) {
+            const backupList = JSON.parse(JSON.stringify(appData.logbook || []));
+            appData.logbook = (appData.logbook || []).filter(x => x.id !== id);
+            saveData();
+            renderLogbook();
+            showToast(`Logbook dihapus.`, () => {
+                appData.logbook = backupList;
+                saveData();
+                renderLogbook();
+            });
+        }
+
+        function renderWorklog() {
+            const container = document.getElementById('worklog-container');
+            if (!container) return;
+            if (!appData.worklogs || appData.worklogs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada sesi kerja.</p>`;
+                return;
+            }
+
+            container.innerHTML = appData.worklogs.map(w => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-mono border-b border-slate-100 pb-2">
+                        <span>${w.date}</span>
+                        <div class="space-x-1">
+                            <button onclick="openWorklogModal('${w.id}')" class="hover:text-slate-600"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteWorklog('${w.id}')" class="hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-800">Dikerjakan: ${escapeHTML(w.done)}</p>
+                    ${w.insights ? `<div class="text-xs text-slate-600"><strong>Temuan Utama:</strong> ${w.insights}</div>` : ''}
+                    ${w.barriers ? `<p class="text-xs text-rose-600"><strong>Kendala:</strong> ${escapeHTML(w.barriers)}</p>` : ''}
+                    <div class="text-xs bg-emerald-50 text-emerald-800 p-2 rounded font-medium">Tindakan Konkret Sesi Berikutnya: ${escapeHTML(w.nextAction)}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openWorklogModal(id = null) {
+            initQuillEditors();
+            document.getElementById('form-worklog').reset();
+            document.getElementById('work-id').value = '';
+            if (editorWorkInsights) editorWorkInsights.root.innerHTML = '';
+            document.getElementById('modal-worklog-title').innerText = id ? 'Edit Sesi Kerja Harian' : 'Catat Sesi Kerja Harian';
+
+            if (id) {
+                const w = (appData.worklogs || []).find(x => x.id === id);
+                if (w) {
+                    document.getElementById('work-id').value = w.id;
+                    document.getElementById('work-done').value = w.done;
+                    if (editorWorkInsights) editorWorkInsights.root.innerHTML = w.insights || '';
+                    document.getElementById('work-barriers').value = w.barriers || '';
+                    document.getElementById('work-next-action').value = w.nextAction || '';
+                }
+            }
+            openModal('modal-worklog');
+        }
+
+        function saveWorklog(e) {
+            e.preventDefault();
+            const doneInput = document.getElementById('work-done').value.trim();
+            const actionInput = document.getElementById('work-next-action').value.trim();
+            if (!doneInput || !actionInput) { showToast("Pekerjaan dan tindakan wajib diisi!"); return; }
+
+            const now = new Date();
+            const dateStr = `${now.toISOString().split('T')[0]} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            
+            if (!Array.isArray(appData.worklogs)) appData.worklogs = [];
+            const id = document.getElementById('work-id').value;
+
+            const wObj = {
+                id: id || `wl-${Date.now()}`, 
+                date: dateStr, 
+                done: doneInput,
+                insights: editorWorkInsights ? editorWorkInsights.root.innerHTML : '',
+                barriers: document.getElementById('work-barriers').value,
+                nextAction: actionInput
+            };
+
+            if (id) {
+                const idx = appData.worklogs.findIndex(x => x.id === id);
+                if (idx !== -1) appData.worklogs[idx] = wObj;
+            } else {
+                appData.worklogs.unshift(wObj);
+            }
+
+            saveData();
+            closeModal('modal-worklog');
+            renderWorklog();
+            showToast("Sesi kerja disimpan.");
+        }
+
+        function deleteWorklog(id) {
+            const backupList = JSON.parse(JSON.stringify(appData.worklogs || []));
+            appData.worklogs = (appData.worklogs || []).filter(x => x.id !== id);
+            saveData();
+            renderWorklog();
+            showToast(`Sesi dihapus.`, () => {
+                appData.worklogs = backupList;
+                saveData();
+                renderWorklog();
+            });
+        }
+
+        function exportDataJSON() {
+            saveCurrentEditorStateToMemory();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `Skripsi_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dl); dl.click(); dl.remove();
+            showToast("Berkas JSON diunduh.");
+        }
+
+        function copyBackupToClipboard() {
+            saveCurrentEditorStateToMemory();
+            const jsonString = JSON.stringify(appData, null, 2);
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = jsonString;
+            dummy.select();
+            try { document.execCommand('copy'); showToast("Data disalin ke Clipboard!"); } 
+            catch (err) { showToast("Gagal menyalin ke clipboard."); }
+            document.body.removeChild(dummy);
+        }
+
+        function importDataJSON(e) {
+            const fileReader = new FileReader();
+            fileReader.onload = function (event) {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    if (parsed && typeof parsed === 'object') {
+                        appData = Object.assign({}, DEFAULT_DATA, parsed);
+                        appData.currentStageId = parseInt(appData.currentStageId) || 1;
+                        if (!appData.profile) appData.profile = JSON.parse(JSON.stringify(DEFAULT_DATA.profile));
+                        if (!Array.isArray(appData.tasks)) appData.tasks = [];
+                        if (!Array.isArray(appData.topics)) appData.topics = [];
+                        if (!Array.isArray(appData.literatures)) appData.literatures = [];
+                        if (!Array.isArray(appData.logbook)) appData.logbook = [];
+                        if (!Array.isArray(appData.worklogs)) appData.worklogs = [];
+                        if (!appData.documents || !appData.documents.proposal) {
+                            appData.documents = JSON.parse(JSON.stringify(DEFAULT_DATA.documents));
+                        }
+                        saveData(); 
+                        window.renderAllData();
+                        showToast('Data berhasil dipulihkan!');
+                    } else showToast('Format JSON tidak valid.');
+                } catch (err) { showToast('Gagal membaca file.'); }
+            };
+            fileReader.readAsText(e.target.files[0]);
+        }
+
+        function exportHTMLToWord(htmlContent, filename) {
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title><style>body{font-family:'Times New Roman',serif;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid black;padding:6px;}</style></head><body>";
+            const blob = new Blob(['\ufeff', header + htmlContent + "</body></html>"], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a"); link.href = url; link.download = filename + '.doc';
+            document.body.appendChild(link); link.click(); link.remove();
+            URL.revokeObjectURL(url);
+            showToast("Dokumen Word diunduh.");
+        }
+
+        function exportTopicsToWord() {
+            if (!appData.topics || appData.topics.length === 0) { showToast("Tidak ada topik."); return; }
+            let html = `<h1>Daftar Kandidat Topik & Identifikasi Masalah</h1><br>`;
+            appData.topics.forEach((t, i) => {
+                html += `h2>Kandidat #${i+1}: ${escapeHTML(t.title)}</h2><table><tr><th width="30%">Aspek</th><th>Keterangan</th></tr><tr><td>Fakta Lapangan</td><td>${escapeHTML(t.facts)}</td></tr><tr><td>Masalah</td><td>${escapeHTML(t.problem)}</td></tr><tr><td>Metode</td><td>${escapeHTML(t.method)}</td></tr><tr><td>Research Gap</td><td>${escapeHTML(t.gap)}</td></tr></table><br>`;
+            });
+            exportHTMLToWord(html, "Kandidat_Topik_Skripsi");
+        }
+
+        function exportLogbookToWord() {
+            if (!appData.logbook || appData.logbook.length === 0) { showToast("Tidak ada logbook."); return; }
+            let html = `<h1>Logbook Bimbingan Skripsi</h1><br>`;
+            appData.logbook.forEach((l, i) => {
+                html += `<h2>Diskusi Tanggal: ${escapeHTML(l.date)}</h2><p><strong>Topik:</strong> ${escapeHTML(l.topic)}</p><table><tr><th width="30%">Masukan Pembimbing</th><td>${l.feedback}</td></tr><tr><td>Keputusan & Alasan</td><td>${escapeHTML(l.decision)}</td></tr></table><br>`;
+            });
+            exportHTMLToWord(html, "Logbook_Diskusi_Skripsi");
+        }
+
+        // --- POMODORO TIMER LOGIC ---
+        let pomoInterval = null;
+        let pomoDuration = 25 * 60;
+        let pomoTimeLeft = 25 * 60;
+        let isPomoRunning = false;
+        let pomoEndTime = 0;
+        let pomoAudioCtx = null; 
+
+        function openPomodoroModal() {
+            document.getElementById('modal-pomodoro').classList.remove('hidden');
+            const sel = document.getElementById('pomo-task-select');
+            const tasks = (appData.tasks || []).filter(t => t.status !== 'Selesai');
+            if (sel) sel.innerHTML = '<option value="">-- Bebas --</option>' + tasks.map(t => `<option value="${t.id}">${escapeHTML(t.name)}</option>`).join('');
+            stopPomodoro();
+            lucide.createIcons();
+        }
+
+        function closePomodoroModal() {
+            stopPomodoro();
+            document.getElementById('modal-pomodoro').classList.add('hidden');
+        }
+
+        function updatePomoDisplay() {
+            const m = Math.floor(pomoTimeLeft / 60).toString().padStart(2, '0');
+            const s = (pomoTimeLeft % 60).toString().padStart(2, '0');
+            const displayEl = document.getElementById('pomo-timer-display');
+            if (displayEl) displayEl.innerText = `${m}:${s}`;
+        }
+
+        function startPomodoro() {
+            if (isPomoRunning) return;
+            isPomoRunning = true;
+            document.getElementById('pomo-btn-start').classList.add('hidden');
+            document.getElementById('pomo-btn-pause').classList.remove('hidden');
+            document.getElementById('pomo-message').innerText = "Fokus sedang berjalan...";
+            
+            if (!pomoAudioCtx) {
+                try { pomoAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+            }
+            if (pomoAudioCtx && pomoAudioCtx.state === 'suspended') { pomoAudioCtx.resume(); }
+
+            pomoEndTime = Date.now() + (pomoTimeLeft * 1000);
+            pomoInterval = setInterval(() => {
+                const diffSeconds = Math.round((pomoEndTime - Date.now()) / 1000);
+                if (diffSeconds <= 0) {
+                    pomoTimeLeft = 0; updatePomoDisplay();
+                    clearInterval(pomoInterval); isPomoRunning = false;
+                    document.getElementById('pomo-message').innerText = "Sesi Selesai!";
+                    try {
+                        if (pomoAudioCtx) {
+                            const osc = pomoAudioCtx.createOscillator(); 
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(440, pomoAudioCtx.currentTime);
+                            osc.connect(pomoAudioCtx.destination); 
+                            osc.start(); 
+                            setTimeout(() => osc.stop(), 500);
+                        }
+                    } catch(e) {}
+                    setTimeout(() => {
+                        document.getElementById('modal-pomodoro').classList.add('hidden');
+                        openWorklogModal();
+                        const selectedTaskId = document.getElementById('pomo-task-select').value;
+                        if (selectedTaskId) {
+                            const task = (appData.tasks || []).find(t => t.id === selectedTaskId);
+                            if (task) document.getElementById('work-done').value = `Fokus 25m: ${escapeHTML(task.name)}`;
+                        }
+                    }, 1500);
+                } else {
+                    pomoTimeLeft = diffSeconds; updatePomoDisplay();
+                }
+            }, 500);
+        }
+
+        function pausePomodoro() {
+            clearInterval(pomoInterval); isPomoRunning = false;
+            document.getElementById('pomo-btn-start').classList.remove('hidden');
+            document.getElementById('pomo-btn-pause').classList.add('hidden');
+            document.getElementById('pomo-message').innerText = "Timer dijeda.";
+        }
+
+        function stopPomodoro() {
+            clearInterval(pomoInterval); isPomoRunning = false;
+            pomoTimeLeft = pomoDuration; updatePomoDisplay();
+            document.getElementById('pomo-btn-start').classList.remove('hidden');
+            document.getElementById('pomo-btn-pause').classList.add('hidden');
+            document.getElementById('pomo-message').innerText = "";
+        }
+
+        // --- AUTH & MODAL HELPERS ---
+        function openAuthModal() { document.getElementById('modal-auth').classList.remove('hidden'); }
+        function closeAuthModal() { document.getElementById('modal-auth').classList.add('hidden'); }
+
+        function logoutAccount() {
+            if (window.firebaseAuthSignOut) {
+                window.firebaseAuthSignOut();
+            } else {
+                showToast("Keluar ke Mode Tamu (Offline).");
+                const textStatus = document.getElementById('settings-auth-status-text');
+                if (textStatus) textStatus.innerText = "Mode Tamu (Lokal)";
+            }
+            closeAuthModal();
+        }
+
+        function popupGoogleLogin() {
+            if (window.linkWithGoogle) {
+                window.linkWithGoogle();
+                closeAuthModal();
+            } else {
+                showToast("Modul Auth Google sedang dimuat...");
+            }
+        }
+
+        // --- TOUR ONBOARDING ---
+        let currentTourStep = 0;
+        const TOUR_STEPS = [
+            { icon: 'map', color: 'text-sky-500', bg: 'bg-sky-50', title: '1. Peta Perjalanan', desc: 'Panduan 9 tahap terstruktur dari awal hingga seminar.' },
+            { icon: 'check-square', color: 'text-emerald-500', bg: 'bg-emerald-50', title: '2. Task List & Kanban', desc: 'Kelola tugas dalam bentuk list atau papan Kanban visual.' },
+            { icon: 'book-open', color: 'text-amber-500', bg: 'bg-amber-50', title: '3. Eksplorasi Topik', desc: 'Bandingkan kandidat judul dengan 6 kriteria akademis.' },
+            { icon: 'file-text', color: 'text-sky-500', bg: 'bg-sky-50', title: '4. Studio Dokumen (3-Mode)', desc: 'Gunakan mode Proposal, Skripsi, dan Artikel Ilmiah dengan Sub-Tab per bab.' },
+            { icon: 'users', color: 'text-rose-500', bg: 'bg-rose-50', title: '5. Triple-Lock Security', desc: 'Data Anda aman dengan Auto-save 1.5s, Ctrl+S, dan Sinkronisasi Cloud!' }
+        ];
+
+        function openOnboardingTour() {
+            currentTourStep = 0; renderTourStep();
+            document.getElementById('modal-onboarding').classList.remove('hidden');
+        }
+
+        function hideDashboardGuide() {
+            document.getElementById('onboarding-guide').classList.add('hidden');
+            if (!appData.settings) appData.settings = {};
+            appData.settings.hasSeenTour = true;
+            saveData();
+            localStorage.setItem('skripsi_tour_seen', 'true');
+        }
+
+        function closeOnboardingTour() {
+            document.getElementById('modal-onboarding').classList.add('hidden');
+            const checkbox = document.getElementById('dont-show-tour-checkbox');
+            if (checkbox && checkbox.checked) {
+                if (!appData.settings) appData.settings = {};
+                appData.settings.hasSeenTour = true;
+                saveData();
+                localStorage.setItem('skripsi_tour_seen', 'true');
+                document.getElementById('onboarding-guide').classList.add('hidden');
+            }
+        }
+
+        function tourStep(direction) { currentTourStep += direction; renderTourStep(); }
+        function renderTourStep() {
+            const stepData = TOUR_STEPS[currentTourStep];
+            document.getElementById('tour-content').innerHTML = `
+                <div class="w-24 h-24 rounded-full ${stepData.bg} ${stepData.color} flex items-center justify-center flex-shrink-0 mx-auto md:mx-0"><i data-lucide="${stepData.icon}" class="w-12 h-12"></i></div>
+                <div class="text-center md:text-left space-y-3"><span class="text-[10px] font-bold uppercase text-slate-400">Langkah ${currentTourStep + 1} dari ${TOUR_STEPS.length}</span><h2 class="text-2xl font-bold text-slate-800">${stepData.title}</h2><p class="text-sm text-slate-600">${stepData.desc}</p></div>
+            `;
+            document.getElementById('tour-progress').style.width = `${((currentTourStep + 1) / TOUR_STEPS.length) * 100}%`;
+            document.getElementById('tour-btn-prev').classList.toggle('hidden', currentTourStep === 0);
+            const isLast = currentTourStep === TOUR_STEPS.length - 1;
+            document.getElementById('tour-btn-next').classList.toggle('hidden', isLast);
+            document.getElementById('tour-btn-finish').classList.toggle('hidden', !isLast);
+            lucide.createIcons();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    </script>
+
+    <!-- FIREBASE CLOUD SYNC & MULTIUSER -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = 'myskripsi-command-center';
+        let firebaseConfig = {
+            apiKey: "AIzaSyBv6rNK7xqwX1FeHDVgen9zWfM7WcKuYGg",
+            authDomain: "myskripsi-command-center.firebaseapp.com",
+            projectId: "myskripsi-command-center",
+            storageBucket: "myskripsi-command-center.firebasestorage.app",
+            messagingSenderId: "629900241686",
+            appId: "1:629900241686:web:608beea25d13de22dd7e37"
+        };
+        
+        if (firebaseConfig.apiKey) {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+
+            function updateAuthUI(user) {
+                const textStatus = document.getElementById('settings-auth-status-text');
+                const userLabel = document.getElementById('sidebar-username-display');
+
+                if (user && !user.isAnonymous && user.email) {
+                    if (textStatus) textStatus.innerText = "Terhubung: " + user.email;
+                    if (userLabel && (!appData.username || appData.username === "Mahasiswa PGSD")) {
+                        appData.username = user.email.split('@')[0];
+                    }
+                } else {
+                    if (textStatus) textStatus.innerText = "Mode Tamu (Lokal)";
+                }
+                updateSidebarUserDisplay();
+            }
+
+            window.linkWithGoogle = async () => {
+                if (!auth.currentUser) return;
+                const provider = new GoogleAuthProvider();
+                try {
+                    showToast("Membuka otentikasi Google...");
+                    const result = await linkWithPopup(auth.currentUser, provider);
+                    const user = result.user;
+                    showToast("Berhasil! Akun ditautkan ke " + user.email);
+                    updateAuthUI(user);
+                } catch (error) {
+                    console.error("Gagal menautkan akun:", error);
+                    showToast("Gagal: " + (error.message || "Terjadi kesalahan otentikasi"));
+                }
+            };
+
+            window.firebaseAuthSignOut = async () => {
+                try {
+                    await signOut(auth);
+                    await signInAnonymously(auth);
+                    showToast("Berhasil keluar ke Mode Tamu.");
+                    updateAuthUI(auth.currentUser);
+                } catch(e) {
+                    showToast("Gagal keluar.");
+                }
+            };
+
+            async function initMultiuserAuth() {
+                onAuthStateChanged(auth, async (user) => {
+                    if (!user) {
+                        try { await signInAnonymously(auth); } catch(e) {
+                            const statusEl = document.getElementById('cloud-sync-status');
+                            if (statusEl) {
+                                statusEl.innerText = '☁️ Cloud Sync Gagal (Offline)';
+                                statusEl.classList.remove('animate-pulse', 'text-amber-500');
+                                statusEl.classList.add('text-rose-500');
+                            }
+                            return;
+                        }
+                    }
+                    const currentUser = auth.currentUser;
+                    if (!currentUser) return;
+
+                    updateAuthUI(currentUser);
+                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'appState');
+
+                    window.syncToCloud = async (data) => {
+                        if (!auth.currentUser) return;
+                        try { await setDoc(docRef, data); } catch (e) { console.error("Cloud Sync Error:", e); }
+                    };
+
+                    let isFirstSnapshot = true;
+                    onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const cloudData = docSnap.data();
+                            window.appData = Object.assign({}, DEFAULT_DATA, cloudData);
+                            window.appData.currentStageId = parseInt(window.appData.currentStageId) || 1;
+                            if (!window.appData.profile) window.appData.profile = JSON.parse(JSON.stringify(DEFAULT_DATA.profile));
+                            if (!Array.isArray(window.appData.tasks)) window.appData.tasks = [];
+                            if (!Array.isArray(window.appData.topics)) window.appData.topics = [];
+                            if (!Array.isArray(window.appData.literatures)) window.appData.literatures = [];
+                            if (!Array.isArray(window.appData.logbook)) window.appData.logbook = [];
+                            if (!Array.isArray(window.appData.worklogs)) window.appData.worklogs = [];
+                            if (!window.appData.documents || !window.appData.documents.proposal) {
+                                window.appData.documents = JSON.parse(JSON.stringify(DEFAULT_DATA.documents));
+                            }
+
+                            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(window.appData));
+                            if(window.renderAllData) window.renderAllData();
+                            updateSidebarUserDisplay();
+                            updateProfileMetaUI();
+                        } else if (isFirstSnapshot) {
+                            window.syncToCloud(window.appData);
+                        }
+                        isFirstSnapshot = false;
+                    }, (err) => { console.error("Cloud Listen Error:", err); });
+
+                    const statusEl = document.getElementById('cloud-sync-status');
+                    if (statusEl) {
+                        statusEl.innerText = '☁️ Cloud Sync Aktif (Aman)';
+                        statusEl.classList.remove('animate-pulse', 'text-amber-500');
+                        statusEl.classList.add('text-emerald-500');
+                    }
+                });
+            }
+            initMultiuserAuth();
+        } else {
+            const statusEl = document.getElementById('cloud-sync-status');
+            if (statusEl) {
+                statusEl.innerText = 'Penyimpanan Offline Saja';
+                statusEl.classList.remove('animate-pulse', 'text-amber-500');
+            }
+        }
+    </script>
+</body>
+</html>
