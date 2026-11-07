@@ -2760,17 +2760,18 @@
     <!-- FIREBASE CLOUD SYNC & MULTIUSER -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = 'myskripsi-command-center';
+        const appId = 'skripsi-command-pgsd';
         let firebaseConfig = {
-            apiKey: "AIzaSyBv6rNK7xqwX1FeHDVgen9zWfM7WcKuYGg",
-            authDomain: "myskripsi-command-center.firebaseapp.com",
-            projectId: "myskripsi-command-center",
-            storageBucket: "myskripsi-command-center.firebasestorage.app",
-            messagingSenderId: "629900241686",
-            appId: "1:629900241686:web:608beea25d13de22dd7e37"
+            apiKey: "AIzaSyA9gKwXLpSR4xalxQtGzIWiHs74D9qa86M",
+            authDomain: "skripsi-command-pgsd.firebaseapp.com",
+            projectId: "skripsi-command-pgsd",
+            storageBucket: "skripsi-command-pgsd.firebasestorage.app",
+            messagingSenderId: "591036719274",
+            appId: "1:591036719274:web:cc6c15871d1dce9d7330d3",
+	        measurementId: "G-N4032H8NCP"
         };
         
         if (firebaseConfig.apiKey) {
@@ -2778,42 +2779,83 @@
             const db = getFirestore(app);
             const auth = getAuth(app);
 
+            // MEMPERBAIKI TAMPILAN STATUS AUTH & AVATAR USER
             function updateAuthUI(user) {
                 const textStatus = document.getElementById('settings-auth-status-text');
                 const userLabel = document.getElementById('sidebar-username-display');
+                const userAvatar = document.getElementById('sidebar-user-avatar');
 
-                if (user && !user.isAnonymous && user.email) {
-                    if (textStatus) textStatus.innerText = "Terhubung: " + user.email;
-                    if (userLabel && (!appData.username || appData.username === "Mahasiswa PGSD")) {
-                        appData.username = user.email.split('@')[0];
+                if (user && !user.isAnonymous && (user.email || user.displayName)) {
+                    const displayName = user.displayName || user.email.split('@')[0];
+                    if (textStatus) textStatus.innerHTML = `<span class="text-emerald-600 font-bold">🟢 Terhubung: ${escapeHTML(user.email || displayName)}</span>`;
+                    if (userLabel) userLabel.innerText = displayName;
+                    if (userAvatar) {
+                        if (user.photoURL) {
+                            userAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full rounded-full object-cover">`;
+                        } else {
+                            userAvatar.innerText = displayName.charAt(0).toUpperCase();
+                        }
                     }
+                    appData.username = displayName;
                 } else {
                     if (textStatus) textStatus.innerText = "Mode Tamu (Lokal)";
+                    const fallbackName = appData.username || "Mahasiswa PGSD";
+                    if (userLabel) userLabel.innerText = fallbackName;
+                    if (userAvatar) userAvatar.innerText = fallbackName.charAt(0).toUpperCase();
                 }
-                updateSidebarUserDisplay();
             }
 
+            // PERBAIKAN: LOGIN GOOGLE DENGAN FALLBACK AUTOMATIC UNTUK DIRECT SIGN-IN
             window.linkWithGoogle = async () => {
-                if (!auth.currentUser) return;
                 const provider = new GoogleAuthProvider();
                 try {
                     showToast("Membuka otentikasi Google...");
-                    const result = await linkWithPopup(auth.currentUser, provider);
-                    const user = result.user;
-                    showToast("Berhasil! Akun ditautkan ke " + user.email);
-                    updateAuthUI(user);
+                    
+                    // 1. Jika sesi saat ini adalah anonim, coba tautkan terlebih dahulu
+                    if (auth.currentUser && auth.currentUser.isAnonymous) {
+                        try {
+                            const result = await linkWithPopup(auth.currentUser, provider);
+                            const user = result.user;
+                            showToast("Berhasil menautkan ke " + (user.email || user.displayName));
+                            updateAuthUI(user);
+                            return;
+                        } catch (linkError) {
+                            // 2. Jika akun Google sudah terdaftar di sesi lain, lakukan Direct Login
+                            if (linkError.code === 'auth/credential-already-in-use' || linkError.code === 'auth/email-already-in-use') {
+                                console.warn("Credential sudah dipakai. Mengalihkan ke Direct Login...");
+                                showToast("Akun Google terdeteksi. Berpindah ke akun utama...");
+                                
+                                const directResult = await signInWithPopup(auth, provider);
+                                updateAuthUI(directResult.user);
+                                showToast("Berhasil masuk sebagai " + (directResult.user.email || directResult.user.displayName));
+                                return;
+                            } else {
+                                throw linkError;
+                            }
+                        }
+                    } else {
+                        // 3. Jika tidak dalam sesi anonim, langsung Sign-In dengan Popup
+                        const result = await signInWithPopup(auth, provider);
+                        const user = result.user;
+                        showToast("Berhasil Masuk sebagai " + (user.email || user.displayName));
+                        updateAuthUI(user);
+                    }
                 } catch (error) {
-                    console.error("Gagal menautkan akun:", error);
-                    showToast("Gagal: " + (error.message || "Terjadi kesalahan otentikasi"));
+                    console.error("Gagal login Google:", error);
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showToast("Proses login dibatalkan.");
+                    } else {
+                        showToast("Gagal Login: " + (error.message || "Domain belum terverifikasi di Firebase"));
+                    }
                 }
             };
 
+            // LOGOUT RESMI KE MODE TAMU
             window.firebaseAuthSignOut = async () => {
                 try {
                     await signOut(auth);
-                    await signInAnonymously(auth);
-                    showToast("Berhasil keluar ke Mode Tamu.");
-                    updateAuthUI(auth.currentUser);
+                    showToast("Berhasil keluar dari akun Google.");
+                    updateAuthUI(null);
                 } catch(e) {
                     showToast("Gagal keluar.");
                 }
@@ -2822,21 +2864,11 @@
             async function initMultiuserAuth() {
                 onAuthStateChanged(auth, async (user) => {
                     if (!user) {
-                        try { await signInAnonymously(auth); } catch(e) {
-                            const statusEl = document.getElementById('cloud-sync-status');
-                            if (statusEl) {
-                                statusEl.innerText = '☁️ Cloud Sync Gagal (Offline)';
-                                statusEl.classList.remove('animate-pulse', 'text-amber-500');
-                                statusEl.classList.add('text-rose-500');
-                            }
-                            return;
-                        }
+                        updateAuthUI(null);
+                        return;
                     }
-                    const currentUser = auth.currentUser;
-                    if (!currentUser) return;
-
-                    updateAuthUI(currentUser);
-                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'appState');
+                    updateAuthUI(user);
+                    const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'appState');
 
                     window.syncToCloud = async (data) => {
                         if (!auth.currentUser) return;
